@@ -1,0 +1,21 @@
+Name:           space
+Version:        0.0.1
+Cabal-Version:  >= 1.2
+License:        OtherLicense
+License-File:   LICENSE
+Author:         Antti Salonen<ajsalonen at gmail dot com>
+Maintainer:     Antti Salonen<ajsalonen at gmail dot com>
+Copyright:      Antti Salonen 2009
+Stability:      Unstable
+Category:       Games
+Synopsis:       Space game.
+Description:    Space game.
+Build-type:     Simple
+
+Executable pacman
+  Build-Depends:   base, haskell98, array>=0.2.0.0,
+                   directory>=1.0.0.0, containers>=0.2.0.0
+  Main-is:         Main.hs
+  Hs-Source-Dirs:  src
+  Ghc-options:     -Wall
+
