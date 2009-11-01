@@ -12,7 +12,7 @@ Synopsis:       Space game.
 Description:    Space game.
 Build-type:     Simple
 
-Executable pacman
+Executable space
   Build-Depends:   base, haskell98, array>=0.2.0.0,
                    directory>=1.0.0.0, containers>=0.2.0.0
   Main-is:         Main.hs
