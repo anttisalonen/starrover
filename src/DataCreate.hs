@@ -49,7 +49,7 @@ createAtmosphere mass = do
 createSatellite :: (RandomGen g) => Flt -> Flt -> String -> Flt -> State g Planet
 createSatellite minmass maxmass name orbitradius = do
   orbit <- createOrbit orbitradius
-  mass <- randomRM (minmass, maxmass)
+  mass <- randomRM (minmass, maxmass) -- TODO: normal distribution
   atmosphere <- createAtmosphere mass
   return $! Planet name orbit (BodyPhysics mass) atmosphere []
 
@@ -60,7 +60,7 @@ createPlanet name orbitradius = do
   atmosphere <- createAtmosphere mass
   numsatellites <- if mass < 1.0 then return 0 else randomRM (0, min 20 (floor (sqrt mass)))
   satelliteorbitradiuses <- sort `fmap` replicateM numsatellites (randomRM (0.002 * mass, 0.01 * mass))
-  satellites <- zipWithM (createSatellite (0.002 * mass) (0.01 * mass)) (bodyNames name) satelliteorbitradiuses
+  satellites <- zipWithM (createSatellite (0.00001 * mass) (0.01 * mass)) (bodyNames name) satelliteorbitradiuses
   return $! Planet name orbit (BodyPhysics mass) atmosphere satellites
 
 bodyNames :: String -> [String]
