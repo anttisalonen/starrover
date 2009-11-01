@@ -51,23 +51,20 @@ createPlanet name orbitradius = do
   orbit <- createOrbit orbitradius
   mass <- randomRM (0.01, 350) -- TODO: normal distribution
   atmosphere <- createAtmosphere mass
-  numsatellites <- if mass < 300.0 then return 0 else randomRM (0, min 20 (floor (sqrt mass)))
-  satelliteorbitradiuses <- sort `fmap` replicateM numsatellites (randomRM (0.002 * mass, 0.01 * mass))
-  satellites <- zipWithM createPlanet (bodyNames name) satelliteorbitradiuses
+  let satellites = []
   return $! Planet name orbit (BodyPhysics mass) atmosphere satellites
-
-bodyNames :: String -> [String]
-bodyNames = namesFromBasenameNum
 
 createStar :: (RandomGen g) => String -> Flt -> Orbit -> State g Star
 createStar name maxplanetorbitradius orbit = do
   t <- randomRM (minStarTemperature, maxStarTemperature) -- TODO: normal distribution
-  numplanets <- randomRM (0, min 10 (floor (sqrt maxplanetorbitradius)))
-  let planetnames = bodyNames name
+  let numplanets = 1
+  let planetnames = namesFromBasenameNum name
   planetorbitradiuses <- sort `fmap` replicateM numplanets (randomRM (0.1, maxplanetorbitradius))
   -- TODO: make sure orbits aren't too close to each other
+  planetorbits <- mapM createOrbit planetorbitradiuses
+  planetmasses <- replicateM numplanets (randomRM (0.01, 350 :: Flt)) -- TODO: normal distribution
   planets <- zipWithM createPlanet planetnames planetorbitradiuses
-  return $! Star name t orbit (filter (\p -> planetTemperature' t p > 30) planets)
+  return $! Star name t orbit planets
 
 namesFromBasenameCap :: String -> [String]
 namesFromBasenameCap n = zipWith (++) (repeat (n ++ " ")) (map (:[]) ['A' .. 'Z'])
@@ -161,16 +158,4 @@ testGalaxy :: Galaxy
 testGalaxy = 
   let r = mkStdGen 20
   in evalState (createGalaxy "milky way" nearsystems) r
-
-testStars :: [Star]
-testStars = concatMap stars (starsystems testGalaxy)
-
-testPlanets :: [Planet]
-testPlanets = concatMap planets testStars
-
-testSatellites :: [Planet]
-testSatellites = concatMap satellites testPlanets
-
-planetTemperatures :: Star -> [Temperature]
-planetTemperatures s = map (planetTemperature s) (planets s)
 
