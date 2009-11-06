@@ -54,8 +54,7 @@ data Planet a = Planet { planetname :: String
                        }
     deriving (Eq, Read, Show)
 
-data SpectralType = SpectralTypeO
-                  | SpectralTypeB
+data SpectralType = SpectralTypeB
                   | SpectralTypeA
                   | SpectralTypeF
                   | SpectralTypeG

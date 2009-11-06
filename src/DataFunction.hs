@@ -1,6 +1,10 @@
 module DataFunction
 where
 
+import Control.Monad.State
+import System.Random
+import Data.Maybe
+
 import DataTypes
 
 mass :: Flt -> Flt -> Flt
@@ -9,21 +13,27 @@ mass density volume = density / volume
 density :: Flt -> Flt -> Flt
 density mass volume = mass / volume
 
-minOTemp = 30000
-minBTemp = 10000
-minATemp = 7500
-minFTemp = 6000
-minGTemp = 5200
-minKTemp = 3700
-minMTemp = 0
+specTempRangeB = (10000, 25000)
+specTempRangeA = (7500, 10000)
+specTempRangeF = (6000, 7500)
+specTempRangeG = (5200, 6000)
+specTempRangeK = (3700, 5200)
+specTempRangeM = (3000, 3700)
 
-specTemps = [minOTemp, minBTemp, minATemp, minFTemp, minGTemp, minKTemp, minMTemp]
+specTempRangeTable :: [(SpectralType, (Temperature, Temperature))]
+specTempRangeTable = zip allEnums specTempRanges
+
+specTempRanges = [specTempRangeB, specTempRangeA, specTempRangeF, specTempRangeG, specTempRangeK, specTempRangeM]
+
+specTempRange :: SpectralType -> (Temperature, Temperature)
+specTempRange s = fromJust $ lookup s specTempRangeTable
 
 allEnums :: (Enum a, Bounded a) => [a]
 allEnums = enumFrom minBound
 
-tempTable :: [(SpectralType, Temperature)]
-tempTable = zip allEnums specTemps
+specMinTemps = map fst specTempRanges
+
+tempTable = zip allEnums specMinTemps
 
 temperatureToSpectralType :: Temperature -> SpectralType
 temperatureToSpectralType t = (fst . head . filter (\(st, t') -> t >= t')) tempTable
@@ -79,4 +89,61 @@ unroll ((a, bs):xs) = (zip (repeat a) bs) ++ (unroll xs)
 planetTemperatures :: Star a -> [Temperature]
 planetTemperatures s = map (planetTemperature s) (planets s)
 
+randomRM :: (RandomGen g, Random a) => (a, a) -> State g a
+randomRM v = do
+  g <- get
+  (x, g') <- return $ randomR v g
+  put g'
+  return x
+
+stdNormal :: (RandomGen g, Random a, Ord a, Floating a) => State g a
+stdNormal = do
+  u1 <- randomRM (-1, 1)
+  u2 <- randomRM (-1, 1)
+  let m = stdNormalMarsaglia u1 u2
+  case m of
+    Nothing      -> stdNormal
+    Just (z1, _) -> return z1
+
+stdNormalMarsaglia :: (Ord a, Floating a) => a -> a -> Maybe (a, a)
+stdNormalMarsaglia y1 y2 = 
+  if q > 1 then Nothing else Just (z1, z2)
+  where z1 = y1 * p
+        z2 = y2 * p
+        q = y1 * y1 + y2 * y2
+        p = sqrt ((-2) * log q / q)
+
+normal :: (RandomGen g, Random a, Ord a, Floating a) => a -> a -> State g a
+normal mu sigma = do
+  n <- stdNormal
+  return $ mu + n * sigma
+
+normalR :: (RandomGen g, Random a, Ord a, Floating a) => (a, a) -> a -> a -> State g a
+normalR (mn, mx) mu sigma = do
+  n <- normal mu sigma
+  if n < mn 
+    then return mn 
+    else if n > mx
+           then return mx else return n
+
+normalIO :: (Random a, Ord a, Floating a) => a -> a -> IO a
+normalIO mu sigma = newStdGen >>= return . evalState (normal mu sigma)
+
+normalRIO :: (Random a, Ord a, Floating a) => (a, a) -> a -> a -> IO a
+normalRIO limits mu sigma = newStdGen >>= return . evalState (normalR limits mu sigma)
+
+average :: (Fractional a) => [a] -> a
+average l = go 0 0 l
+  where go acc len []     = acc / len
+        go acc len (x:xs) = go (acc + x) (len + 1) xs
+
+median :: (Num a) => [a] -> a
+median [] = 0
+median (x:xs) = go 0 x xs
+   where go _ x []     = x
+         go 0 x (n:ns) = go 1 x ns
+         go 1 x (n:ns) = go 1 n ns
+
+clamp :: (Ord a) => a -> a -> a -> a
+clamp mn mx v = if v < mn then mn else if v > mx then mx else v
 

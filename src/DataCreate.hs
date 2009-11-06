@@ -28,16 +28,6 @@ milkyWay :: Galaxy
 milkyWay = Galaxy a [solSS]
 -}
 
-randomRM :: (RandomGen g, Random a) => (a, a) -> State g a
-randomRM v = do
-  g <- get
-  (x, g') <- return $ randomR v g
-  put g'
-  return x
-
-minStarTemperature = 3000
-maxStarTemperature = 25000
-
 createAtmosphere :: (RandomGen g) => Flt -> State g Atmosphere
 createAtmosphere mass = do
   if mass < 0.01 then return NoAtmosphere
@@ -69,9 +59,25 @@ createPlanet genfunc name orbitradius = do
 bodyNames :: String -> [String]
 bodyNames = namesFromBasenameNum
 
+minStarTemperature = 3000
+maxStarTemperature = 25000
+
+starprobs :: [(Flt, SpectralType)]
+starprobs = [(0.001, SpectralTypeB), (0.007, SpectralTypeA), (0.04, SpectralTypeF), (0.11, SpectralTypeG), (0.23, SpectralTypeK), (1, SpectralTypeM)]
+
+getProbTableValue :: (Ord a) => a -> [(a, b)] -> b
+getProbTableValue n [(_, v)] = v
+getProbTableValue n ((k, v):xs) = if n <= k then v else getProbTableValue n xs
+
+randomStarTemperature :: (RandomGen g) => SpectralType -> State g Temperature
+randomStarTemperature s = randomRM (specTempRange s)
+
 createStar :: (RandomGen g) => (Planet () -> State g a) -> String -> Flt -> Orbit -> State g (Star a)
 createStar genfunc name maxplanetorbitradius orbit = do
-  t <- randomRM (minStarTemperature, maxStarTemperature) -- TODO: normal distribution
+  r <- randomRM (0, 1)
+  let s = getProbTableValue r starprobs
+  t <- randomStarTemperature s
+  -- t <- randomRM (minStarTemperature, maxStarTemperature) -- TODO: normal distribution
   numplanets <- randomRM (0, min 10 (floor (sqrt maxplanetorbitradius)))
   let planetnames = bodyNames name
   planetorbitradiuses <- sort `fmap` replicateM numplanets (randomRM (0.1, maxplanetorbitradius))
