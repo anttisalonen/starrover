@@ -36,12 +36,22 @@ data BodyPhysics = BodyPhysics { bodymass :: Flt
                                }
     deriving (Eq, Read, Show)
 
-data Planet = Planet { planetname :: String
-                     , orbit :: Orbit
-                     , physics :: BodyPhysics
-                     , atmosphere :: Atmosphere
-                     , satellites :: [Planet]
-                     }
+data Civilization a = Civilization { civname :: String
+                                   , settlements :: [Settlement a]
+                                   }
+    deriving (Eq, Read, Show)
+
+data Settlement a = Settlement { settlementplanet :: Planet a
+                               , settlementstar :: Star a }
+    deriving (Eq, Read, Show)
+
+data Planet a = Planet { planetname :: String
+                       , orbit :: Orbit
+                       , physics :: BodyPhysics
+                       , atmosphere :: Atmosphere
+                       , satellites :: [Planet a]
+                       , info :: a
+                       }
     deriving (Eq, Read, Show)
 
 data SpectralType = SpectralTypeO
@@ -55,21 +65,37 @@ data SpectralType = SpectralTypeO
 
 type Vector3 = (Flt, Flt, Flt)
 
-data Star = Star { starname :: String
-                 , temperature :: Temperature
-                 , starorbit :: Orbit
-                 , planets :: [Planet]
-                 }
+data Star a = Star { starname :: String
+                   , temperature :: Temperature
+                   , starorbit :: Orbit
+                   , planets :: [Planet a]
+                   }
     deriving (Eq, Read, Show)
 
-data StarSystem = StarSystem { ssname :: String
-                             , ssposition :: Vector3 
-                             , stars :: [Star]
-                             }
+data StarSystem a = StarSystem { starsystemname :: String
+                               , ssposition :: Vector3 
+                               , stars :: [Star a]
+                               }
     deriving (Eq, Read, Show)
 
-data Galaxy = Galaxy { galaxyname :: String
-                     , starsystems :: [StarSystem]
-                     }
+data Galaxy a = Galaxy { galaxyname :: String
+                       , starsystems :: [StarSystem a]
+                       }
     deriving (Eq, Read, Show)
+
+class Named a where
+  name :: a -> String
+
+instance Named (Galaxy a) where
+  name = galaxyname
+
+instance Named (StarSystem a) where
+  name = starsystemname
+
+instance Named (Star a) where
+  name = starname
+
+instance Named (Planet a) where
+  name = planetname
+
 
