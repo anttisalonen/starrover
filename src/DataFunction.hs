@@ -69,8 +69,8 @@ sustainsLife s p =
   atmosphere p == Oxygen && 
   planetMass p > 0.01  && 
   planetMass p < 20.0  && 
-  planetTemperature s p < 3300 && 
-  planetTemperature s p > 80 -- TODO: improve
+  planetTemperature s p < 320 && 
+  planetTemperature s p > 250
 
 planetMass :: Planet a -> Flt
 planetMass = bodymass . physics

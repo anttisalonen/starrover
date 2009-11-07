@@ -28,31 +28,37 @@ milkyWay :: Galaxy
 milkyWay = Galaxy a [solSS]
 -}
 
-createAtmosphere :: (RandomGen g) => Flt -> State g Atmosphere
-createAtmosphere mass = do
+createAtmosphere :: (RandomGen g) => Flt -> Temperature -> Flt -> State g Atmosphere
+createAtmosphere mass startemp orbitradius = do
   if mass < 0.01 then return NoAtmosphere
    else if mass > 15.0 then return GasGiant
-    else do
-      r <- randomRM (1, 4)
-      return $! toEnum r
+    else createRockyPlanetAtmosphere startemp orbitradius
 
-createSatellite :: (RandomGen g) => Flt -> Flt -> (Planet () -> State g a) -> String -> Flt -> State g (Planet a)
-createSatellite minmass maxmass genfunc name orbitradius = do
+createRockyPlanetAtmosphere :: (RandomGen g) => Temperature -> Flt -> State g Atmosphere
+createRockyPlanetAtmosphere startemp orbitradius = do
+  life <- (== 1) `fmap` randomRM (1, 100 :: Int)
+  r <- randomRM (1, 4)
+  return $! toEnum r
+
+createSatellite :: (RandomGen g) => Flt -> Flt -> (Planet () -> State g a) -> Temperature -> String -> Flt -> State g (Planet a)
+createSatellite minmass maxmass genfunc startemp name orbitradius = do
   orbit <- createOrbit orbitradius
   mass <- randomRM (minmass, maxmass)
-  atmosphere <- createAtmosphere mass
+  atmosphere <- createAtmosphere mass startemp orbitradius
   let emptyplanet = Planet name orbit (BodyPhysics mass) atmosphere [] ()
   cont <- genfunc emptyplanet
   return $! Planet name orbit (BodyPhysics mass) atmosphere [] cont
 
-createPlanet :: (RandomGen g) => (Planet () -> State g a) -> String -> Flt -> State g (Planet a)
-createPlanet genfunc name orbitradius = do
+createPlanet :: (RandomGen g) => (Planet () -> State g a) -> Temperature -> String -> Flt -> State g (Planet a)
+createPlanet genfunc startemp name orbitradius = do
   orbit <- createOrbit orbitradius
-  mass <- exp `fmap` randomRM (-3.1, 6.1)
-  atmosphere <- createAtmosphere mass
-  numsatellites <- if mass < 1.0 then return 0 else randomRM (0, min 20 (floor (sqrt mass)))
+  -- mass <- (^3) `fmap` randomRM (0.1, 7.5)
+  mass <- (**5.4) `fmap` randomRM (0.1, 3)
+  -- mass <- (^2) `fmap` randomRM (0.1, 20)
+  atmosphere <- createAtmosphere mass startemp orbitradius
+  numsatellites <- if mass < 1.0 then return 0 else randomRM (0, min 10 (floor (sqrt mass)))
   satelliteorbitradiuses <- sort `fmap` replicateM numsatellites (randomRM (0.002 * mass, 0.01 * mass))
-  satellites <- zipWithM (createSatellite (0.00001 * mass) (0.01 * mass) genfunc) (bodyNames name) satelliteorbitradiuses
+  satellites <- zipWithM (createSatellite (0.00001 * mass) (0.01 * mass) genfunc startemp) (bodyNames name) satelliteorbitradiuses
   cont <- genfunc (Planet name orbit (BodyPhysics mass) atmosphere [] ())
   return $! Planet name orbit (BodyPhysics mass) atmosphere satellites cont
 
@@ -81,7 +87,7 @@ createStar genfunc name maxplanetorbitradius orbit = do
   let planetnames = bodyNames name
   planetorbitradiuses <- sort `fmap` replicateM numplanets (randomRM (0.1, maxplanetorbitradius))
   -- TODO: make sure orbits aren't too close to each other
-  planets <- zipWithM (createPlanet genfunc) planetnames planetorbitradiuses
+  planets <- zipWithM (createPlanet genfunc t) planetnames planetorbitradiuses
   return $! Star name t orbit (filter (\p -> planetTemperature' t p > 30) planets)
 
 namesFromBasenameCap :: String -> [String]

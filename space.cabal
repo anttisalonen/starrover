@@ -14,8 +14,8 @@ Build-type:     Simple
 
 Executable space
   Build-Depends:   base, haskell98, array>=0.2.0.0,
-                   directory>=1.0.0.0, containers>=0.2.0.0
+                   directory>=1.0.0.0, containers>=0.2.0.0,
+                   random>=1.0.0.0, mtl>=1.1.0.0
   Main-is:         Main.hs
   Hs-Source-Dirs:  src
-  Ghc-options:     -Wall
 

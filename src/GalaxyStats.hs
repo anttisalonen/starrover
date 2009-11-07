@@ -20,7 +20,7 @@ starsPerStarSystemInGalaxy g = fromIntegral (numStarsInGalaxy g) / fromIntegral 
 
 planetsPerStarsInGalaxy g = fromIntegral (numPlanetsInGalaxy g) / fromIntegral (numStarsInGalaxy g)
 planetsPerStarsystemsInGalaxy g = fromIntegral (numPlanetsInGalaxy g) / fromIntegral (numStarSystemsInGalaxy g)
-moonsPerPlanetsInGalaxy g = fromIntegral (numMoonsInGalaxy g) / fromIntegral (numPlanetsInGalaxy g)
+moonsPerPlanetsInGalaxy g = fromIntegral (numMoonsInGalaxy g) / fromIntegral (numPlanetsInGalaxy g - numMoonsInGalaxy g)
 
 numBodiesOrbitingStar :: Star a -> Int
 numBodiesOrbitingStar s = 
@@ -123,6 +123,7 @@ galaxyStats g =
      showstars "Number of stars of spectral type K: " kstars starstotal ++
      showstars "Number of stars of spectral type M: " mstars starstotal ++
      "Number of planets: " ++ (show . numPlanetsInGalaxy) g ++ "\n" ++
+     "Number of planets (excluding moons): " ++ (show (numPlanetsInGalaxy g - numMoonsInGalaxy g)) ++ "\n" ++
      "Number of planets / starsystem: " ++ (show2f . planetsPerStarsystemsInGalaxy) g ++ "\n" ++
      "Number of planets / star: " ++ (show2f . planetsPerStarsInGalaxy) g ++ "\n" ++
      "Number of moons: " ++ (show . numMoonsInGalaxy) g ++ "\n" ++
