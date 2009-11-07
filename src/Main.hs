@@ -3,6 +3,7 @@ where
 
 import Text.Printf
 import qualified Data.Map as M
+import Data.Maybe
 
 import DataCreate
 import DataFunction
@@ -77,16 +78,20 @@ starInfo s z = starinfo ++ "\n" ++ planetinfo
   where starinfo = "Star name: " ++ name s
         planetinfo = case satelliteInZipper z of
                        Just _  -> ""
-                       Nothing -> getXInfoFromY s planets (genTitle infoSatellite)
+                       Nothing -> getXInfoFromY s planets (genTitle (infoSatellite s))
 
-satelliteInfo s z = ""
+satelliteInfo s z = satinfo ++ satsinfo
+  where satinfo = infoSatellite (fromJust (starInZipper z)) s
+        satsinfo = if (M.null (satellites s)) then "" else "\n" ++ getXInfoFromY s satellites (genTitle (flip satelliteInfo z))
 
-infoSatellite :: Planet a -> String
-infoSatellite s = 
-  "Name: " ++ name s ++ " - " ++
-  "Orbit radius: " ++ (show3f . orbitradius . orbit) s ++ " - " ++
-  "Mass: " ++ (show3f . bodymass . physics) s ++ " - " ++ 
-  "Type: " ++ (show . planettype) s
+infoSatellite :: Star a -> Planet a -> String
+infoSatellite s p = 
+  "Name: " ++ name p ++ " - " ++
+  "Orbit radius: " ++ (show3f . orbitradius . orbit) p ++ " - " ++
+  "Temperature: " ++ show (planetTemperature s p) ++ " - " ++
+  "Mass: " ++ (show3f . bodymass . physics) p ++ " - " ++ 
+  "Number of satellites: " ++ (show . M.size . satellites) p ++ " - " ++
+  "Type: " ++ (show . planettype) p
 
 browseGalaxy g = do
   putStrLn $ genInfo g
