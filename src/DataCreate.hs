@@ -219,7 +219,7 @@ testGalaxy = testRandomGalaxy 20 16
 testRandomGalaxy :: Int -> Int -> Galaxy Terrain
 testRandomGalaxy v numsys =
   let r = mkStdGen v
-  in evalState (createGalaxy (\_ -> return (Terrain [])) "milky way" (map show [1..numsys])) r
+  in evalState (createGalaxy (\_ -> return (Terrain [])) "milky way" (take numsys $ nearsystems ++ map show [1..numsys])) r
 
 choose :: (RandomGen g) => [a] -> State g a
 choose l = do

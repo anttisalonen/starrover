@@ -22,6 +22,7 @@ type Input a = Maybe (GalaxyZipper a)
 
 getInput :: GalaxyZipper a -> IO (Input a)
 getInput z = do
+  putStrLn $ genInfo z
   c <- getLine
   case reads c of
     [(num, _)] -> if num == 0 
@@ -29,8 +30,11 @@ getInput z = do
                     else case tryDown num z of
                            Just nz -> return $ Just nz
                            Nothing -> getInput z
-    _          -> if not (null c) && head c == 'q' 
-                    then return Nothing 
+    _          -> if not (null c)
+                    then case head c of
+                           'q' -> return Nothing
+                           's' -> putStrLn (galaxyStats (galaxyInZipper z)) >> getInput z
+                           _   -> getInput z
                     else getInput z
 
 genInfo :: GalaxyZipper a -> String
@@ -93,9 +97,8 @@ infoSatellite s p =
   "Number of satellites: " ++ (show . M.size . satellites) p ++ " - " ++
   "Type: " ++ (show . planettype) p
 
-browseGalaxy g = do
-  putStrLn $ genInfo g
-  i <- getInput g
+browseGalaxy z = do
+  i <- getInput z
   case i of
     Nothing -> return ()
     Just nz -> browseGalaxy nz
