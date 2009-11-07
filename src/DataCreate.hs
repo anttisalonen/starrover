@@ -76,9 +76,8 @@ createPlanet genfunc startemp name orbitradius = do
             3 -> randomRM (0.0001, 0.1)
             _ -> randomRM (0.1, 20)
   atmosphere <- createPlanetType mass startemp orbitradius
-  numsatellites <- if mass < 1.0 then return 0 else randomRM (0, min 16 (floor (sqrt mass)))
-  satelliteorbitradiuses <- sort `fmap` replicateM numsatellites (randomRM (0.002 * mass, 0.01 * mass))
-  satellites <- zipWithM (createSatellite (0.00001 * mass) (0.01 * mass) genfunc startemp) (bodyNames name) satelliteorbitradiuses
+  numsatellites <- if mass < 1.0 then return 0 else randomRM (0 :: Int, min 16 (floor (sqrt mass)))
+  satellites <- zipWithM (createSatellite (0.00001 * mass) (0.01 * mass) genfunc startemp) (bodyNames name) (replicate numsatellites orbitradius)
   cont <- genfunc (Planet name orbit (BodyPhysics mass) atmosphere M.empty ())
   return $! Planet name orbit (BodyPhysics mass) atmosphere (stdMap satellites) cont
 

@@ -69,7 +69,7 @@ sstitle ss = printf "%s - %d stars - %s" (name ss) (M.size (stars ss)) ((show . 
 genTitle :: (a -> String) -> Int -> a -> String
 genTitle f num x = printf "%4d. %s" num (f x)
 
-startitle s = printf "%s - Type: %s - Temperature: %6d - %d planets" (name s) (show (spectralType s)) (temperature s) (M.size (planets s))
+startitle s = printf "%s - Type: %s - Temperature (Celsius): %6d - %d planets" (name s) (show (spectralType s)) ((kelvinToCelsius . temperature) s) (M.size (planets s))
 
 smallInfo :: a -> (a -> Maybe b) -> (b -> a -> String) -> String
 smallInfo z getfunc printfunc = 
@@ -92,7 +92,7 @@ infoSatellite :: Star a -> Planet a -> String
 infoSatellite s p = 
   "Name: " ++ name p ++ " - " ++
   "Orbit radius: " ++ (show3f . orbitradius . orbit) p ++ " - " ++
-  "Temperature: " ++ show (planetTemperature s p) ++ " - " ++
+  "Temperature (Celsius): " ++ show ((kelvinToCelsius . planetTemperature s) p) ++ " - " ++
   "Mass: " ++ (show3f . bodymass . physics) p ++ " - " ++ 
   "Number of satellites: " ++ (show . M.size . satellites) p ++ " - " ++
   "Type: " ++ (show . planettype) p
