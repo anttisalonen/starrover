@@ -19,6 +19,8 @@ starsPerStarSystemInGalaxy :: Galaxy a -> Float
 starsPerStarSystemInGalaxy g = fromIntegral (numStarsInGalaxy g) / fromIntegral (numStarSystemsInGalaxy g)
 
 planetsPerStarsInGalaxy g = fromIntegral (numPlanetsInGalaxy g) / fromIntegral (numStarsInGalaxy g)
+planetsPerStarsystemsInGalaxy g = fromIntegral (numPlanetsInGalaxy g) / fromIntegral (numStarSystemsInGalaxy g)
+moonsPerPlanetsInGalaxy g = fromIntegral (numMoonsInGalaxy g) / fromIntegral (numPlanetsInGalaxy g)
 
 numBodiesOrbitingStar :: Star a -> Int
 numBodiesOrbitingStar s = 
@@ -35,6 +37,12 @@ numPlanetsInGalaxy :: Galaxy a -> Int
 numPlanetsInGalaxy = sum . map numBodiesInStarSystem . starsystems
 
 starsInGalaxy = concatMap stars . starsystems
+
+moonsInGalaxy :: Galaxy a -> [Planet a]
+moonsInGalaxy g = concatMap satellites (planetsInGalaxy g)
+
+numMoonsInGalaxy :: Galaxy a -> Int
+numMoonsInGalaxy = length . moonsInGalaxy
 
 numStarsByType t g = (filter (\s -> spectralType s == t)) (starsInGalaxy g)
 
@@ -115,7 +123,10 @@ galaxyStats g =
      showstars "Number of stars of spectral type K: " kstars starstotal ++
      showstars "Number of stars of spectral type M: " mstars starstotal ++
      "Number of planets: " ++ (show . numPlanetsInGalaxy) g ++ "\n" ++
+     "Number of planets / starsystem: " ++ (show2f . planetsPerStarsystemsInGalaxy) g ++ "\n" ++
      "Number of planets / star: " ++ (show2f . planetsPerStarsInGalaxy) g ++ "\n" ++
+     "Number of moons: " ++ (show . numMoonsInGalaxy) g ++ "\n" ++
+     "Number of moons / planet: " ++ (show2f . moonsPerPlanetsInGalaxy) g ++ "\n" ++
      "Minimum planet mass (Earths): " ++ (show . minPlanetMassInGalaxy) g ++ "\n" ++
      "Median planet mass (Earths): " ++ (show . medPlanetMassInGalaxy) g ++ "\n" ++
      "Average planet mass (Earths): " ++ (show . avgPlanetMassInGalaxy) g ++ "\n" ++

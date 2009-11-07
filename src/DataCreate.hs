@@ -31,7 +31,7 @@ milkyWay = Galaxy a [solSS]
 createAtmosphere :: (RandomGen g) => Flt -> State g Atmosphere
 createAtmosphere mass = do
   if mass < 0.01 then return NoAtmosphere
-   else if mass > 25.0 then return GasGiant
+   else if mass > 15.0 then return GasGiant
     else do
       r <- randomRM (1, 4)
       return $! toEnum r
@@ -77,8 +77,7 @@ createStar genfunc name maxplanetorbitradius orbit = do
   r <- randomRM (0, 1)
   let s = getProbTableValue r starprobs
   t <- randomStarTemperature s
-  -- t <- randomRM (minStarTemperature, maxStarTemperature) -- TODO: normal distribution
-  numplanets <- randomRM (0, min 10 (floor (sqrt maxplanetorbitradius)))
+  numplanets <- randomRM (0, min 16 (floor (maxplanetorbitradius / 2)))
   let planetnames = bodyNames name
   planetorbitradiuses <- sort `fmap` replicateM numplanets (randomRM (0.1, maxplanetorbitradius))
   -- TODO: make sure orbits aren't too close to each other
