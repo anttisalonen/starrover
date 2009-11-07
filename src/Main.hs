@@ -73,5 +73,5 @@ browseGalaxy g = do
   i <- getInput g
   case i of
     Nothing -> return ()
-    Just nz -> browseGalaxy nz
+    Just x  -> return ()
 
