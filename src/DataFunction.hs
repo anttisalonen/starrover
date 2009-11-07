@@ -4,6 +4,7 @@ where
 import Control.Monad.State
 import System.Random
 import Data.Maybe
+import qualified Data.Map as M
 
 import DataTypes
 
@@ -82,10 +83,10 @@ planetMass :: Planet a -> Flt
 planetMass = bodymass . physics
 
 starPlanetPairs :: Galaxy a -> [(Star a, Planet a)]
-starPlanetPairs g = unroll (zip (allStars g) (map planets (allStars g)))
+starPlanetPairs g = unroll (zip (allStars g) (map (M.elems . planets) (allStars g)))
 
 allStars :: Galaxy a -> [Star a]
-allStars g = concatMap stars (starsystems g)
+allStars g = concatMap (M.elems . stars) ((M.elems . starsystems) g)
 
 -- unroll [(1, [1,2,3]), (2, [3,4,5])] == [(1,1),(1,2),(1,3),(2,3),(2,4),(2,5)]
 unroll :: [(a, [b])] -> [(a, b)]
@@ -93,7 +94,7 @@ unroll []           = []
 unroll ((a, bs):xs) = (zip (repeat a) bs) ++ (unroll xs)
 
 planetTemperatures :: Star a -> [Temperature]
-planetTemperatures s = map (planetTemperature s) (planets s)
+planetTemperatures s = map (planetTemperature s) ((M.elems . planets) s)
 
 randomRM :: (RandomGen g, Random a) => (a, a) -> State g a
 randomRM v = do
@@ -157,4 +158,9 @@ median (x:xs) = go 0 x xs
 
 clamp :: (Ord a) => a -> a -> a -> a
 clamp mn mx v = if v < mn then mn else if v > mx then mx else v
+
+safeHead :: [a] -> Maybe a
+safeHead []    = Nothing
+safeHead (h:_) = Just h
+
 

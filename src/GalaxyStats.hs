@@ -1,19 +1,20 @@
 module GalaxyStats
 where
 
+import qualified Data.Map as M
 import Data.Ratio
 import Text.Printf
 import DataTypes
 import DataFunction
 
 numStarSystemsInGalaxy :: Galaxy a -> Int
-numStarSystemsInGalaxy = length . starsystems
+numStarSystemsInGalaxy = M.size . starsystems
 
 numStarsInSystem :: StarSystem a -> Int
-numStarsInSystem = length . stars
+numStarsInSystem = M.size . stars
 
 numStarsInGalaxy :: Galaxy a -> Int
-numStarsInGalaxy g = sum $ map numStarsInSystem (starsystems g)
+numStarsInGalaxy g = sum $ map numStarsInSystem ((M.elems . starsystems) g)
 
 starsPerStarSystemInGalaxy :: Galaxy a -> Float
 starsPerStarSystemInGalaxy g = fromIntegral (numStarsInGalaxy g) / fromIntegral (numStarSystemsInGalaxy g)
@@ -26,22 +27,23 @@ moonsPerBodiesInGalaxy g = fromIntegral (numMoonsInGalaxy g) / fromIntegral (num
 
 numBodiesOrbitingStar :: Star a -> Int
 numBodiesOrbitingStar s = 
-  let ps = planets s
+  let ps = (M.elems . planets) s
   in length ps + sum (map numSatellites ps)
 
 numSatellites :: Planet a -> Int
-numSatellites = length . satellites
+numSatellites = M.size . satellites
 
 numBodiesInStarSystem :: StarSystem a -> Int
-numBodiesInStarSystem = sum . map numBodiesOrbitingStar . stars
+numBodiesInStarSystem = sum . map numBodiesOrbitingStar . M.elems . stars
 
 numBodiesInGalaxy :: Galaxy a -> Int
-numBodiesInGalaxy = sum . map numBodiesInStarSystem . starsystems
+numBodiesInGalaxy = sum . map numBodiesInStarSystem . M.elems . starsystems
 
-starsInGalaxy = concatMap stars . starsystems
+starsInGalaxy :: Galaxy a -> [Star a]
+starsInGalaxy = concatMap M.elems . map stars . M.elems . starsystems
 
 moonsInGalaxy :: Galaxy a -> [Planet a]
-moonsInGalaxy g = concatMap satellites (bodiesInGalaxy g)
+moonsInGalaxy = concatMap M.elems . map satellites . bodiesInGalaxy
 
 numMoonsInGalaxy :: Galaxy a -> Int
 numMoonsInGalaxy = length . moonsInGalaxy
@@ -55,14 +57,16 @@ numGStarsInGalaxy = length . numStarsByType SpectralTypeG
 numKStarsInGalaxy = length . numStarsByType SpectralTypeK
 numMStarsInGalaxy = length . numStarsByType SpectralTypeM
 
-bodiesAroundPlanet = satellites
+bodiesAroundPlanet = M.elems . satellites
 
 bodiesAroundStar :: Star a -> [Planet a]
-bodiesAroundStar s = let pls = planets s in pls ++ (concatMap bodiesAroundPlanet pls)
+bodiesAroundStar s = let pls = (M.elems . planets) s in pls ++ (concatMap bodiesAroundPlanet pls)
 
-bodiesInStarSystem s = concatMap bodiesAroundStar (stars s)
+bodiesInStarSystem :: StarSystem a -> [Planet a]
+bodiesInStarSystem s = concatMap bodiesAroundStar ((M.elems . stars) s)
 
-bodiesInGalaxy = concatMap bodiesInStarSystem . starsystems
+bodiesInGalaxy :: Galaxy a -> [Planet a]
+bodiesInGalaxy = concatMap bodiesInStarSystem . M.elems . starsystems
 
 numBodiesByPlanetType a g = length $ (filter (\p -> planettype p == a)) (bodiesInGalaxy g)
 
@@ -80,7 +84,7 @@ numGasGiantsInGalaxy g = length $ (filter isGasGiant) (bodiesInGalaxy g)
 
 numWaterWeatherSystemBodiesInGalaxy :: Galaxy a -> Int
 numWaterWeatherSystemBodiesInGalaxy = numRockyBodiesByAtmosphere WaterWeatherSystem
-numNoAtmosphereBodiesInGalaxy = numBodiesByPlanetType NoAtmosphere
+numNoAtmosphereBodiesInGalaxy g = numBodiesByPlanetType NoAtmosphere g + numBodiesByPlanetType Planetoid g
 numHabitableBodiesInGalaxy g = length $ filter (uncurry sustainsLife) (starPlanetPairs g)
 
 showPerc :: Int -> Int -> String
@@ -111,6 +115,9 @@ medBodyTemperatureInGalaxy = kelvinToCelsius . median . planetTemperaturesInGala
 
 show2f :: Float -> String
 show2f f = printf "%.2f" f
+
+show3f :: Float -> String
+show3f f = printf "%.3f" f
 
 numPlanetsInGalaxy g = numBodiesInGalaxy g - numMoonsInGalaxy g
 

@@ -1,6 +1,8 @@
 module DataTypes
 where
 
+import qualified Data.Map as M
+
 data Good = Good { goodname :: String }
     deriving (Eq, Read, Show)
 
@@ -57,7 +59,7 @@ data Planet a = Planet { planetname :: String
                        , orbit :: Orbit
                        , physics :: BodyPhysics
                        , planettype :: PlanetType
-                       , satellites :: [Planet a]
+                       , satellites :: M.Map Int (Planet a)
                        , info :: a
                        }
     deriving (Eq, Read, Show)
@@ -75,18 +77,18 @@ type Vector3 = (Flt, Flt, Flt)
 data Star a = Star { starname :: String
                    , temperature :: Temperature
                    , starorbit :: Orbit
-                   , planets :: [Planet a]
+                   , planets :: M.Map Int (Planet a)
                    }
     deriving (Eq, Read, Show)
 
 data StarSystem a = StarSystem { starsystemname :: String
                                , ssposition :: Vector3 
-                               , stars :: [Star a]
+                               , stars :: M.Map Int (Star a)
                                }
     deriving (Eq, Read, Show)
 
 data Galaxy a = Galaxy { galaxyname :: String
-                       , starsystems :: [StarSystem a]
+                       , starsystems :: M.Map Int (StarSystem a)
                        }
     deriving (Eq, Read, Show)
 
