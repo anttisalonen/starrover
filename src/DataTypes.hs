@@ -11,12 +11,20 @@ type Flt = Float
 
 type Temperature = Int
 
-data Atmosphere = NoAtmosphere
-                | Nitrogen
+data PlanetType = Planetoid
+                | NoAtmosphere
+                | RockyPlanet Atmosphere
+                | SmallGasGiant
+                | MediumGasGiant
+                | LargeGasGiant
+                | VeryLargeGasGiant
+    deriving (Eq, Read, Show)
+
+data Atmosphere = Nitrogen
                 | CarbonDioxide
-                | Oxygen
-                | Methane
-                | GasGiant
+                | WaterWeatherSystem
+                | MethaneWeatherSystem
+                | SulphurDioxide
     deriving (Eq, Read, Show, Enum, Bounded)
 
 type Ressource = (Good, Int)
@@ -48,7 +56,7 @@ data Settlement a = Settlement { settlementplanet :: Planet a
 data Planet a = Planet { planetname :: String
                        , orbit :: Orbit
                        , physics :: BodyPhysics
-                       , atmosphere :: Atmosphere
+                       , planettype :: PlanetType
                        , satellites :: [Planet a]
                        , info :: a
                        }

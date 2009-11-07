@@ -28,23 +28,39 @@ milkyWay :: Galaxy
 milkyWay = Galaxy a [solSS]
 -}
 
-createAtmosphere :: (RandomGen g) => Flt -> Temperature -> Flt -> State g Atmosphere
-createAtmosphere mass startemp orbitradius = do
-  if mass < 0.01 then return NoAtmosphere
-   else if mass > 15.0 then return GasGiant
-    else createRockyPlanetAtmosphere startemp orbitradius
+gasGiantByMass :: Flt -> PlanetType
+gasGiantByMass mass | mass < 20.0  = SmallGasGiant
+                    | mass < 100.0 = MediumGasGiant
+                    | mass < 400.0 = LargeGasGiant
+                    | otherwise    = VeryLargeGasGiant
 
-createRockyPlanetAtmosphere :: (RandomGen g) => Temperature -> Flt -> State g Atmosphere
-createRockyPlanetAtmosphere startemp orbitradius = do
-  life <- (== 1) `fmap` randomRM (1, 100 :: Int)
-  r <- randomRM (1, 4)
-  return $! toEnum r
+createPlanetType :: (RandomGen g) => Flt -> Temperature -> Flt -> State g PlanetType
+createPlanetType mass startemp orbitradius = do
+  if mass < 0.001 then return Planetoid
+   else if mass < 0.01 then return NoAtmosphere
+   else if mass > 15.0 then return (gasGiantByMass mass)
+   else createRockyPlanetAtmosphere mass startemp orbitradius
+
+createRockyPlanetAtmosphere :: (RandomGen g) => Flt -> Temperature -> Flt -> State g PlanetType
+createRockyPlanetAtmosphere mass startemp orbitradius = do
+  weather <- randomRM (1, 100 :: Int)
+  let atm1 = if weather < 5
+               then RockyPlanet WaterWeatherSystem 
+               else if weather < 10 then RockyPlanet MethaneWeatherSystem
+               else if weather < 20 then RockyPlanet SulphurDioxide
+               else if weather < 60 then RockyPlanet CarbonDioxide
+               else RockyPlanet Nitrogen
+  return $!
+    case atm1 of
+      RockyPlanet WaterWeatherSystem   -> if (planetTemperature'' startemp orbitradius atm1) > 330 then RockyPlanet Nitrogen else atm1
+      RockyPlanet MethaneWeatherSystem -> if (planetTemperature'' startemp orbitradius atm1) > 600 then RockyPlanet Nitrogen else atm1
+      _                                -> atm1
 
 createSatellite :: (RandomGen g) => Flt -> Flt -> (Planet () -> State g a) -> Temperature -> String -> Flt -> State g (Planet a)
 createSatellite minmass maxmass genfunc startemp name orbitradius = do
   orbit <- createOrbit orbitradius
   mass <- randomRM (minmass, maxmass)
-  atmosphere <- createAtmosphere mass startemp orbitradius
+  atmosphere <- createPlanetType mass startemp orbitradius
   let emptyplanet = Planet name orbit (BodyPhysics mass) atmosphere [] ()
   cont <- genfunc emptyplanet
   return $! Planet name orbit (BodyPhysics mass) atmosphere [] cont
@@ -55,7 +71,7 @@ createPlanet genfunc startemp name orbitradius = do
   -- mass <- (^3) `fmap` randomRM (0.1, 7.5)
   mass <- (**5.4) `fmap` randomRM (0.1, 3)
   -- mass <- (^2) `fmap` randomRM (0.1, 20)
-  atmosphere <- createAtmosphere mass startemp orbitradius
+  atmosphere <- createPlanetType mass startemp orbitradius
   numsatellites <- if mass < 1.0 then return 0 else randomRM (0, min 10 (floor (sqrt mass)))
   satelliteorbitradiuses <- sort `fmap` replicateM numsatellites (randomRM (0.002 * mass, 0.01 * mass))
   satellites <- zipWithM (createSatellite (0.00001 * mass) (0.01 * mass) genfunc startemp) (bodyNames name) satelliteorbitradiuses

@@ -18,9 +18,11 @@ numStarsInGalaxy g = sum $ map numStarsInSystem (starsystems g)
 starsPerStarSystemInGalaxy :: Galaxy a -> Float
 starsPerStarSystemInGalaxy g = fromIntegral (numStarsInGalaxy g) / fromIntegral (numStarSystemsInGalaxy g)
 
+bodiesPerStarsInGalaxy g = fromIntegral (numBodiesInGalaxy g) / fromIntegral (numStarsInGalaxy g)
 planetsPerStarsInGalaxy g = fromIntegral (numPlanetsInGalaxy g) / fromIntegral (numStarsInGalaxy g)
+bodiesPerStarsystemsInGalaxy g = fromIntegral (numBodiesInGalaxy g) / fromIntegral (numStarSystemsInGalaxy g)
 planetsPerStarsystemsInGalaxy g = fromIntegral (numPlanetsInGalaxy g) / fromIntegral (numStarSystemsInGalaxy g)
-moonsPerPlanetsInGalaxy g = fromIntegral (numMoonsInGalaxy g) / fromIntegral (numPlanetsInGalaxy g - numMoonsInGalaxy g)
+moonsPerBodiesInGalaxy g = fromIntegral (numMoonsInGalaxy g) / fromIntegral (numBodiesInGalaxy g - numMoonsInGalaxy g)
 
 numBodiesOrbitingStar :: Star a -> Int
 numBodiesOrbitingStar s = 
@@ -33,13 +35,13 @@ numSatellites = length . satellites
 numBodiesInStarSystem :: StarSystem a -> Int
 numBodiesInStarSystem = sum . map numBodiesOrbitingStar . stars
 
-numPlanetsInGalaxy :: Galaxy a -> Int
-numPlanetsInGalaxy = sum . map numBodiesInStarSystem . starsystems
+numBodiesInGalaxy :: Galaxy a -> Int
+numBodiesInGalaxy = sum . map numBodiesInStarSystem . starsystems
 
 starsInGalaxy = concatMap stars . starsystems
 
 moonsInGalaxy :: Galaxy a -> [Planet a]
-moonsInGalaxy g = concatMap satellites (planetsInGalaxy g)
+moonsInGalaxy g = concatMap satellites (bodiesInGalaxy g)
 
 numMoonsInGalaxy :: Galaxy a -> Int
 numMoonsInGalaxy = length . moonsInGalaxy
@@ -53,64 +55,79 @@ numGStarsInGalaxy = length . numStarsByType SpectralTypeG
 numKStarsInGalaxy = length . numStarsByType SpectralTypeK
 numMStarsInGalaxy = length . numStarsByType SpectralTypeM
 
-planetsAroundPlanet = satellites
+bodiesAroundPlanet = satellites
 
-planetsAroundStar :: Star a -> [Planet a]
-planetsAroundStar s = let pls = planets s in pls ++ (concatMap planetsAroundPlanet pls)
+bodiesAroundStar :: Star a -> [Planet a]
+bodiesAroundStar s = let pls = planets s in pls ++ (concatMap bodiesAroundPlanet pls)
 
-planetsInStarSystem s = concatMap planetsAroundStar (stars s)
+bodiesInStarSystem s = concatMap bodiesAroundStar (stars s)
 
-planetsInGalaxy = concatMap planetsInStarSystem . starsystems
+bodiesInGalaxy = concatMap bodiesInStarSystem . starsystems
 
-numPlanetsByAtmosphere a g = length $ (filter (\p -> atmosphere p == a)) (planetsInGalaxy g)
+numBodiesByPlanetType a g = length $ (filter (\p -> planettype p == a)) (bodiesInGalaxy g)
 
-numGasGiantsInGalaxy = numPlanetsByAtmosphere GasGiant
-numOxygenPlanetsInGalaxy = numPlanetsByAtmosphere Oxygen
-numNoAtmospherePlanetsInGalaxy = numPlanetsByAtmosphere NoAtmosphere
-numHabitablePlanetsInGalaxy g = length $ filter (uncurry sustainsLife) (starPlanetPairs g)
+numRockyBodiesByAtmosphere :: Atmosphere -> Galaxy a -> Int
+numRockyBodiesByAtmosphere a g = length $ filter (\p -> planettype p == RockyPlanet a) (bodiesInGalaxy g)
+
+isGasGiant p = case planettype p of
+                 SmallGasGiant     -> True
+                 MediumGasGiant    -> True
+                 LargeGasGiant     -> True
+                 VeryLargeGasGiant -> True
+                 _                 -> False
+
+numGasGiantsInGalaxy g = length $ (filter isGasGiant) (bodiesInGalaxy g)
+
+numWaterWeatherSystemBodiesInGalaxy :: Galaxy a -> Int
+numWaterWeatherSystemBodiesInGalaxy = numRockyBodiesByAtmosphere WaterWeatherSystem
+numNoAtmosphereBodiesInGalaxy = numBodiesByPlanetType NoAtmosphere
+numHabitableBodiesInGalaxy g = length $ filter (uncurry sustainsLife) (starPlanetPairs g)
 
 showPerc :: Int -> Int -> String
 showPerc a b = printf " (%.2f%%)" (100.0 * (fromIntegral a / fromIntegral b) :: Float)
 
+showstars :: String -> Int -> Int -> String
 showstars c st tot = c ++ show st ++ (showPerc st tot) ++ "\n"
 
-planetMassesInGalaxy g = map planetMass (planetsInGalaxy g)
+planetMassesInGalaxy g = map planetMass (bodiesInGalaxy g)
 
-minPlanetMassInGalaxy = minimum . planetMassesInGalaxy
+minBodyMassInGalaxy = minimum . planetMassesInGalaxy
 
-maxPlanetMassInGalaxy = maximum . planetMassesInGalaxy
+maxBodyMassInGalaxy = maximum . planetMassesInGalaxy
 
-medPlanetMassInGalaxy = median . planetMassesInGalaxy
+medBodyMassInGalaxy = median . planetMassesInGalaxy
 
-avgPlanetMassInGalaxy = average . planetMassesInGalaxy
+avgBodyMassInGalaxy = average . planetMassesInGalaxy
 
 planetTemperaturesInGalaxy g = concatMap planetTemperatures (starsInGalaxy g)
 
-minPlanetTemperatureInGalaxy = kelvinToCelsius . minimum . planetTemperaturesInGalaxy
+minBodyTemperatureInGalaxy = kelvinToCelsius . minimum . planetTemperaturesInGalaxy
 
-maxPlanetTemperatureInGalaxy = kelvinToCelsius . maximum . planetTemperaturesInGalaxy
+maxBodyTemperatureInGalaxy = kelvinToCelsius . maximum . planetTemperaturesInGalaxy
 
-avgPlanetTemperatureInGalaxy = kelvinToCelsius . averageInt . planetTemperaturesInGalaxy
+avgBodyTemperatureInGalaxy = kelvinToCelsius . averageInt . planetTemperaturesInGalaxy
 
-medPlanetTemperatureInGalaxy = kelvinToCelsius . median . planetTemperaturesInGalaxy
+medBodyTemperatureInGalaxy = kelvinToCelsius . median . planetTemperaturesInGalaxy
 
 show2f :: Float -> String
 show2f f = printf "%.2f" f
 
+numPlanetsInGalaxy g = numBodiesInGalaxy g - numMoonsInGalaxy g
+
 galaxyStats :: Galaxy a -> String
 galaxyStats g = 
   let starstotal = numStarsInGalaxy g
-      planetstotal = numPlanetsInGalaxy g
+      bodiestotal = numBodiesInGalaxy g
       bstars = numBStarsInGalaxy g
       astars = numAStarsInGalaxy g
       fstars = numFStarsInGalaxy g
       gstars = numGStarsInGalaxy g
       kstars = numKStarsInGalaxy g
       mstars = numMStarsInGalaxy g
-      gasplanets = numGasGiantsInGalaxy g
-      oxyplanets = numOxygenPlanetsInGalaxy g
-      noatmplanets = numNoAtmospherePlanetsInGalaxy g
-      habitableplanets = numHabitablePlanetsInGalaxy g
+      gasbodies = numGasGiantsInGalaxy g
+      waterbodies = numWaterWeatherSystemBodiesInGalaxy g
+      noatmbodies = numNoAtmosphereBodiesInGalaxy g
+      habitablebodies = numHabitableBodiesInGalaxy g
   in
      "Galaxy name: " ++ name g ++ "\n" ++
      "Number of star systems: " ++ (show . numStarSystemsInGalaxy) g ++ "\n" ++
@@ -122,22 +139,22 @@ galaxyStats g =
      showstars "Number of stars of spectral type G: " gstars starstotal ++
      showstars "Number of stars of spectral type K: " kstars starstotal ++
      showstars "Number of stars of spectral type M: " mstars starstotal ++
+     "Number of bodies: " ++ (show . numBodiesInGalaxy) g ++ "\n" ++
      "Number of planets: " ++ (show . numPlanetsInGalaxy) g ++ "\n" ++
-     "Number of planets (excluding moons): " ++ (show (numPlanetsInGalaxy g - numMoonsInGalaxy g)) ++ "\n" ++
      "Number of planets / starsystem: " ++ (show2f . planetsPerStarsystemsInGalaxy) g ++ "\n" ++
      "Number of planets / star: " ++ (show2f . planetsPerStarsInGalaxy) g ++ "\n" ++
      "Number of moons: " ++ (show . numMoonsInGalaxy) g ++ "\n" ++
-     "Number of moons / planet: " ++ (show2f . moonsPerPlanetsInGalaxy) g ++ "\n" ++
-     "Minimum planet mass (Earths): " ++ (show . minPlanetMassInGalaxy) g ++ "\n" ++
-     "Median planet mass (Earths): " ++ (show . medPlanetMassInGalaxy) g ++ "\n" ++
-     "Average planet mass (Earths): " ++ (show . avgPlanetMassInGalaxy) g ++ "\n" ++
-     "Maximum planet mass (Earths): " ++ (show . maxPlanetMassInGalaxy) g ++ "\n" ++
-     "Minimum planet temperature (Celsius): " ++ (show . minPlanetTemperatureInGalaxy) g ++ "\n" ++
-     "Median planet temperature (Celsius): " ++ (show . medPlanetTemperatureInGalaxy) g ++ "\n" ++
-     "Average planet temperature (Celsius): " ++ (show . avgPlanetTemperatureInGalaxy) g ++ "\n" ++
-     "Maximum planet temperature (Celsius): " ++ (show . maxPlanetTemperatureInGalaxy) g ++ "\n" ++
-     showstars "Number of gas giants: " gasplanets planetstotal ++
-     showstars "Number of oxygen planets: " oxyplanets planetstotal ++
-     showstars "Number of planets without atmosphere: " noatmplanets planetstotal ++
-     showstars "Number of habitable planets: " habitableplanets planetstotal
+     "Number of moons / planet: " ++ (show2f . moonsPerBodiesInGalaxy) g ++ "\n" ++
+     "Minimum body mass (Earths): " ++ (show . minBodyMassInGalaxy) g ++ "\n" ++
+     "Median body mass (Earths): " ++ (show . medBodyMassInGalaxy) g ++ "\n" ++
+     "Average body mass (Earths): " ++ (show . avgBodyMassInGalaxy) g ++ "\n" ++
+     "Maximum body mass (Earths): " ++ (show . maxBodyMassInGalaxy) g ++ "\n" ++
+     "Minimum body temperature (Celsius): " ++ (show . minBodyTemperatureInGalaxy) g ++ "\n" ++
+     "Median body temperature (Celsius): " ++ (show . medBodyTemperatureInGalaxy) g ++ "\n" ++
+     "Average body temperature (Celsius): " ++ (show . avgBodyTemperatureInGalaxy) g ++ "\n" ++
+     "Maximum body temperature (Celsius): " ++ (show . maxBodyTemperatureInGalaxy) g ++ "\n" ++
+     showstars "Number of gas giants: " gasbodies bodiestotal ++
+     showstars "Number of oxygen bodies: " waterbodies bodiestotal ++
+     showstars "Number of bodies without atmosphere: " noatmbodies bodiestotal ++
+     showstars "Number of habitable bodies: " habitablebodies bodiestotal
 

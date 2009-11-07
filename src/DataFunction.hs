@@ -44,29 +44,35 @@ spectralType s = temperatureToSpectralType (temperature s)
 kelvinToCelsius :: Temperature -> Temperature
 kelvinToCelsius = subtract 273
 
-planetTemperature'' :: Temperature -> Flt -> Atmosphere -> Temperature
-planetTemperature'' t d a = floor $ 300 * (((fromIntegral t) / 6000) ^ 2) * (d ** (-0.7)) * acoeff
-   where acoeff = case a of
-           NoAtmosphere -> 0.8
-           Nitrogen -> 0.9
-           CarbonDioxide -> 0.95
-           Oxygen -> 1.0
-           Methane -> 1.5
-           GasGiant -> 1.0
+planetTemperature'' :: Temperature -> Flt -> PlanetType -> Temperature
+planetTemperature'' t d planettype = floor $ 300 * (((fromIntegral t) / 6000) ^ 2) * (d ** (-0.7)) * acoeff
+   where acoeff = case planettype of
+           Planetoid         -> 0.8
+           NoAtmosphere      -> 0.8
+           RockyPlanet a     -> case a of
+                                  MethaneWeatherSystem -> 1.5
+                                  WaterWeatherSystem   -> 1.0
+                                  Nitrogen             -> 0.9
+                                  CarbonDioxide        -> 0.95
+                                  SulphurDioxide       -> 1.1
+           SmallGasGiant     -> 1.0
+           MediumGasGiant    -> 1.0
+           LargeGasGiant     -> 1.0
+           VeryLargeGasGiant -> 1.0
 
 planetTemperature' :: Temperature -> Planet a -> Temperature
 planetTemperature' t planet =
   planetTemperature''
     t
     (orbitradius (orbit planet)) 
-    (atmosphere planet)
+    (planettype planet)
 
 planetTemperature :: Star a -> Planet a -> Temperature -- TODO: take other stars in starsystem into account
 planetTemperature star = planetTemperature' (temperature star)
 
 sustainsLife :: Star a -> Planet a -> Bool
 sustainsLife s p = 
-  atmosphere p == Oxygen && 
+  planettype p == RockyPlanet WaterWeatherSystem && 
   planetMass p > 0.01  && 
   planetMass p < 20.0  && 
   planetTemperature s p < 320 && 
