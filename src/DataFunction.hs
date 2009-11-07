@@ -137,6 +137,11 @@ average l = go 0 0 l
   where go acc len []     = acc / len
         go acc len (x:xs) = go (acc + x) (len + 1) xs
 
+averageInt :: [Int] -> Int
+averageInt l = go 0 0 l
+  where go acc len []     = acc `div` len
+        go acc len (x:xs) = go (acc + x) (len + 1) xs
+
 median :: (Num a) => [a] -> a
 median [] = 0
 median (x:xs) = go 0 x xs

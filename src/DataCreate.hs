@@ -170,13 +170,24 @@ nearsystems = ["Alpha Centauri",
                "Procyon",
                "61 Cygni",
                "Tau Ceti",
-               "Fomalhaut"
+               "Fomalhaut",
+               "Struve 2398",
+               "Groombridge 34",
+               "Epsilon Indi",
+               "DX Cancri",
+               "GJ 1061",
+               "YZ Ceti", 
+               "Lyuten's Star",
+               "Kapteyn's Star"
               ]
 
 testGalaxy :: Galaxy Terrain
-testGalaxy = 
-  let r = mkStdGen 20
-  in evalState (createGalaxy (\_ -> return (Terrain [])) "milky way" nearsystems) r
+testGalaxy = testRandomGalaxy 20 16
+
+testRandomGalaxy :: Int -> Int -> Galaxy Terrain
+testRandomGalaxy v numsys =
+  let r = mkStdGen v
+  in evalState (createGalaxy (\_ -> return (Terrain [])) "milky way" (map show [1..numsys])) r
 
 testStars :: [Star Terrain]
 testStars = concatMap stars (starsystems testGalaxy)

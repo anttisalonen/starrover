@@ -15,8 +15,10 @@ numStarsInSystem = length . stars
 numStarsInGalaxy :: Galaxy a -> Int
 numStarsInGalaxy g = sum $ map numStarsInSystem (starsystems g)
 
-starsPerStarSystemInGalaxy :: Galaxy a -> Ratio Int
-starsPerStarSystemInGalaxy g = numStarsInGalaxy g % numStarSystemsInGalaxy g
+starsPerStarSystemInGalaxy :: Galaxy a -> Float
+starsPerStarSystemInGalaxy g = fromIntegral (numStarsInGalaxy g) / fromIntegral (numStarSystemsInGalaxy g)
+
+planetsPerStarsInGalaxy g = fromIntegral (numPlanetsInGalaxy g) / fromIntegral (numStarsInGalaxy g)
 
 numBodiesOrbitingStar :: Star a -> Int
 numBodiesOrbitingStar s = 
@@ -70,9 +72,9 @@ minPlanetMassInGalaxy = minimum . planetMassesInGalaxy
 
 maxPlanetMassInGalaxy = maximum . planetMassesInGalaxy
 
-medPlanetMassInGalaxy g = planetMassesInGalaxy g !! (length (planetMassesInGalaxy g) `div` 2)
+medPlanetMassInGalaxy = median . planetMassesInGalaxy
 
-avgPlanetMassInGalaxy g = sum (planetMassesInGalaxy g) / fromIntegral (numPlanetsInGalaxy g)
+avgPlanetMassInGalaxy = average . planetMassesInGalaxy
 
 planetTemperaturesInGalaxy g = concatMap planetTemperatures (starsInGalaxy g)
 
@@ -80,9 +82,12 @@ minPlanetTemperatureInGalaxy = kelvinToCelsius . minimum . planetTemperaturesInG
 
 maxPlanetTemperatureInGalaxy = kelvinToCelsius . maximum . planetTemperaturesInGalaxy
 
-avgPlanetTemperatureInGalaxy g = kelvinToCelsius $ floor $ fromIntegral (sum (planetTemperaturesInGalaxy g)) / fromIntegral (numPlanetsInGalaxy g)
+avgPlanetTemperatureInGalaxy = kelvinToCelsius . averageInt . planetTemperaturesInGalaxy
 
-medPlanetTemperatureInGalaxy g = planetTemperaturesInGalaxy g !! (length (planetTemperaturesInGalaxy g) `div` 2)
+medPlanetTemperatureInGalaxy = kelvinToCelsius . median . planetTemperaturesInGalaxy
+
+show2f :: Float -> String
+show2f f = printf "%.2f" f
 
 galaxyStats :: Galaxy a -> String
 galaxyStats g = 
@@ -102,7 +107,7 @@ galaxyStats g =
      "Galaxy name: " ++ name g ++ "\n" ++
      "Number of star systems: " ++ (show . numStarSystemsInGalaxy) g ++ "\n" ++
      "Number of stars: " ++ (show . numStarsInGalaxy) g ++ "\n" ++
-     "Number of stars / star system: " ++ (show . starsPerStarSystemInGalaxy) g ++ "\n" ++
+     "Number of stars / star system: " ++ (show2f . starsPerStarSystemInGalaxy) g ++ "\n" ++
      showstars "Number of stars of spectral type B: " bstars starstotal ++
      showstars "Number of stars of spectral type A: " astars starstotal ++
      showstars "Number of stars of spectral type F: " fstars starstotal ++
@@ -110,13 +115,14 @@ galaxyStats g =
      showstars "Number of stars of spectral type K: " kstars starstotal ++
      showstars "Number of stars of spectral type M: " mstars starstotal ++
      "Number of planets: " ++ (show . numPlanetsInGalaxy) g ++ "\n" ++
+     "Number of planets / star: " ++ (show2f . planetsPerStarsInGalaxy) g ++ "\n" ++
      "Minimum planet mass (Earths): " ++ (show . minPlanetMassInGalaxy) g ++ "\n" ++
-     "Average planet mass (Earths): " ++ (show . avgPlanetMassInGalaxy) g ++ "\n" ++
      "Median planet mass (Earths): " ++ (show . medPlanetMassInGalaxy) g ++ "\n" ++
+     "Average planet mass (Earths): " ++ (show . avgPlanetMassInGalaxy) g ++ "\n" ++
      "Maximum planet mass (Earths): " ++ (show . maxPlanetMassInGalaxy) g ++ "\n" ++
      "Minimum planet temperature (Celsius): " ++ (show . minPlanetTemperatureInGalaxy) g ++ "\n" ++
-     "Average planet temperature (Celsius): " ++ (show . avgPlanetTemperatureInGalaxy) g ++ "\n" ++
      "Median planet temperature (Celsius): " ++ (show . medPlanetTemperatureInGalaxy) g ++ "\n" ++
+     "Average planet temperature (Celsius): " ++ (show . avgPlanetTemperatureInGalaxy) g ++ "\n" ++
      "Maximum planet temperature (Celsius): " ++ (show . maxPlanetTemperatureInGalaxy) g ++ "\n" ++
      showstars "Number of gas giants: " gasplanets planetstotal ++
      showstars "Number of oxygen planets: " oxyplanets planetstotal ++
