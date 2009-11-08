@@ -14,6 +14,7 @@ import Statistics
 import Math
 import Utils
 import ZipperGalaxy
+import ZipperGalaxyUtils
 
 gasGiantByMass :: Flt -> PlanetType
 gasGiantByMass mass | mass < 20.0  = SmallGasGiant
@@ -187,7 +188,7 @@ testRandomGalaxy v numsys =
   let r = mkStdGen v
   in evalState (createGalaxy (\_ -> return (Terrain [])) "milky way" (take numsys $ nearsystems ++ map show [1..numsys])) r
 
-createLife :: (Eq a, RandomGen g) => Galaxy a -> String -> State g (Maybe (Civilization a))
+createLife :: (RandomGen g) => Galaxy Terrain -> String -> State g (Maybe Civilization)
 createLife g cname = do
   let ps = filter (uncurry sustainsLife) (planetsWithStarSystemInGalaxy g)
   if null ps 
@@ -199,7 +200,7 @@ createLife g cname = do
         Nothing -> return Nothing
         Just s  -> return $! Just $ Civilization cname ([Settlement s])
 
-testCiv :: Maybe (Civilization Terrain)
+testCiv :: Maybe Civilization
 testCiv = 
   let r = mkStdGen 20
   in evalState (createLife (testRandomGalaxy 21 256) "humans") r

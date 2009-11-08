@@ -4,6 +4,7 @@ where
 import Data.Maybe
 import Control.Monad.State
 import System.Random
+import Text.Printf
 
 import Math
 import Statistics
@@ -68,4 +69,11 @@ choose l = do
   let n = length l
   i <- randomRM (0, n - 1)
   return (l !! i)
+
+show2f :: Float -> String
+show2f f = printf "%.2f" f
+
+show3f :: Float -> String
+show3f f = printf "%.3f" f
+
 

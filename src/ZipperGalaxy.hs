@@ -57,22 +57,4 @@ up (g, Just (ss, Nothing)) = (g, Nothing)
 up (g, Just (ss, Just (s, []))) = (g, Just (ss, Nothing))
 up (g, Just (ss, Just (s, (sat:sats)))) = (g, Just (ss, Just (s, sats)))
 
-findZipperGalaxyToPlanet :: (Eq a) => Planet a -> Galaxy a -> Maybe (GalaxyZipper a)
-findZipperGalaxyToPlanet p g = firstMaybe (findZipperStarSystemToPlanet p g) (M.elems (starsystems g))
-
-findZipperStarSystemToPlanet :: (Eq a) => Planet a -> Galaxy a -> StarSystem a -> Maybe (GalaxyZipper a)
-findZipperStarSystemToPlanet p g ss = firstMaybe (findZipperStarToPlanet p g ss) (M.elems (stars ss))
-
-findZipperStarToPlanet :: (Eq a) => Planet a -> Galaxy a -> StarSystem a -> Star a -> Maybe (GalaxyZipper a)
-findZipperStarToPlanet p g ss s = 
-  let pls = (M.elems . planets) s
-  in if p `elem` pls
-       then Just (g, Just (ss, Just (s, [p])))
-       else firstMaybe (findZipperPlanetToPlanet p g ss s) pls
-
-findZipperPlanetToPlanet :: (Eq a) => Planet a -> Galaxy a -> StarSystem a -> Star a -> Planet a -> Maybe (GalaxyZipper a)
-findZipperPlanetToPlanet p g ss s p' = 
-  if p `elem` (M.elems . satellites) p'
-    then Just (g, Just (ss, Just (s, [p, p'])))
-    else Nothing
 

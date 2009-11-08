@@ -9,6 +9,7 @@ import Galaxy
 import DataFunction
 import Statistics
 import Named
+import Utils
 
 numStarSystemsInGalaxy :: Galaxy a -> Int
 numStarSystemsInGalaxy = M.size . starsystems
@@ -116,12 +117,6 @@ maxBodyTemperatureInGalaxy = kelvinToCelsius . maximum . planetTemperaturesInGal
 avgBodyTemperatureInGalaxy = kelvinToCelsius . averageInt . planetTemperaturesInGalaxy
 
 medBodyTemperatureInGalaxy = kelvinToCelsius . median . planetTemperaturesInGalaxy
-
-show2f :: Float -> String
-show2f f = printf "%.2f" f
-
-show3f :: Float -> String
-show3f f = printf "%.3f" f
 
 numPlanetsInGalaxy g = numBodiesInGalaxy g - numMoonsInGalaxy g
 
