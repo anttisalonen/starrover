@@ -4,7 +4,6 @@ where
 import qualified Data.Map as M
 
 import Galaxy
-import DataFunction
 import Utils
 
 type GalaxyZipper a = (Galaxy a, Maybe (StarSystem a, Maybe (Star a, [Planet a])))

@@ -1,23 +1,16 @@
 module Main
 where
 
-import Text.Printf
-import qualified Data.Map as M
 import Data.Maybe
 
 import DataCreate
-import DataFunction
 import GalaxyStats
-import Galaxy
-import Named
-import Utils
 import ZipperGalaxy
 import ZipperGalaxyUtils
 
 main :: IO ()
 main = do
   let g = testRandomGalaxy 21 16
-  let stats = galaxyStats g
   putStrLn (galaxyStats g)
   browseGalaxy (g, Nothing)
 

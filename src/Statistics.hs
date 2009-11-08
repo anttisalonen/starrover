@@ -59,9 +59,8 @@ averageInt l = go 0 0 l
 
 median :: (Num a) => [a] -> a
 median [] = 0
-median (x:xs) = go 0 x xs
+median (p:ps) = go False p ps
    where go _ x []     = x
-         go 0 x (n:ns) = go 1 x ns
-         go 1 x (n:ns) = go 1 n ns
-
+         go False x (_:ns) = go True  x ns
+         go True  _ (n:ns) = go False n ns
 

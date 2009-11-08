@@ -22,10 +22,10 @@ allEnums :: (Enum a, Bounded a) => [a]
 allEnums = enumFrom minBound
 
 mass :: Flt -> Flt -> Flt
-mass density volume = density / volume
+mass density' volume' = density' / volume'
 
 density :: Flt -> Flt -> Flt
-density mass volume = mass / volume
+density mass' volume' = mass' / volume'
 
 round100 :: Int -> Int
 round100 i = i `div` 100 * 100
@@ -49,16 +49,16 @@ separate (x:y:xs) = if x * 1.5 > y then separate (x:xs) else x:(separate (y:xs))
 -- distances [2, 3, 68, 70, 300, 4000] = [1, 1, 2, 2, 230, 3700]
 distances :: (Num a, Ord a) => [a] -> [a]
 distances []         = []
-distances [a]        = [0]
+distances [_]        = [0]
 distances [a, b]     = [b - a, b - a]
 distances (a:b:c:ds) = b - a : go a b c ds
   where go a b c [] = min (b - a) (c - b) : c - b : []
         go a b c ds = min (b - a) (c - b) : go b c (head ds) (tail ds)
 
 zipWith3M :: (Monad m) => (a -> b -> c -> m d) -> [a] -> [b] -> [c] -> m [d]
-zipWith3M f [] _ _ = return []
-zipWith3M f _ [] _ = return []
-zipWith3M f _ _ [] = return []
+zipWith3M _ [] _ _ = return []
+zipWith3M _ _ [] _ = return []
+zipWith3M _ _ _ [] = return []
 zipWith3M f (a:as) (b:bs) (c:cs) = do
   n <- f a b c
   rest <- zipWith3M f as bs cs

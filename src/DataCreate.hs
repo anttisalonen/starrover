@@ -1,7 +1,6 @@
 module DataCreate
 where
 
-import Data.Char (chr)
 import Data.List (sort)
 import Control.Monad.State
 import System.Random
@@ -13,7 +12,6 @@ import DataFunction
 import Statistics
 import Math
 import Utils
-import ZipperGalaxy
 import ZipperGalaxyUtils
 
 gasGiantByMass :: Flt -> PlanetType

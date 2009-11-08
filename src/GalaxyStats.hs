@@ -2,7 +2,6 @@ module GalaxyStats
 where
 
 import qualified Data.Map as M
-import Data.Ratio
 import Text.Printf
 
 import Galaxy

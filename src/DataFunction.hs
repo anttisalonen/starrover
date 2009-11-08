@@ -1,8 +1,6 @@
 module DataFunction
 where
 
-import Control.Monad.State
-import System.Random
 import Data.Maybe
 import qualified Data.Map as M
 
