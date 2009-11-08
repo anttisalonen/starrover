@@ -1,4 +1,4 @@
-Name:           space
+Name:           starrover
 Version:        0.0.1
 Cabal-Version:  >= 1.2
 License:        OtherLicense
@@ -12,7 +12,7 @@ Synopsis:       Space game.
 Description:    Space game.
 Build-type:     Simple
 
-Executable space
+Executable starrover
   Build-Depends:   base, haskell98, array>=0.2.0.0,
                    directory>=1.0.0.0, containers>=0.2.0.0,
                    random>=1.0.0.0, mtl>=1.1.0.0
