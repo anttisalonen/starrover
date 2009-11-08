@@ -69,7 +69,13 @@ sstitle ss = printf "%s - %d stars - %s" (name ss) (M.size (stars ss)) ((show . 
 genTitle :: (a -> String) -> Int -> a -> String
 genTitle f num x = printf "%4d. %s" num (f x)
 
-startitle s = printf "%s - Type: %s - Temperature (Celsius): %6d - %d planets" (name s) (show (spectralType s)) ((kelvinToCelsius . temperature) s) (M.size (planets s))
+startitle s = printf 
+    "%s - Type: %s - Temperature (Celsius): %6d - Orbit radius: %.3f - %d planets" 
+      (name s) 
+      (show (spectralType s)) 
+      ((kelvinToCelsius . temperature) s) 
+      ((orbitradius . starorbit) s)
+      (M.size (planets s))
 
 smallInfo :: a -> (a -> Maybe b) -> (b -> a -> String) -> String
 smallInfo z getfunc printfunc = 
