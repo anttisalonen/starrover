@@ -51,8 +51,9 @@ data Civilization a = Civilization { civname :: String
                                    }
     deriving (Eq, Read, Show)
 
-data Settlement a = Settlement { settlementplanet :: Planet a
-                               , settlementstar :: Star a }
+type GalaxyZipper a = (Galaxy a, Maybe (StarSystem a, Maybe (Star a, [Planet a])))
+
+data Settlement a = Settlement { settlementzipper :: GalaxyZipper a }
     deriving (Eq, Read, Show)
 
 data Planet a = Planet { planetname :: String

@@ -68,22 +68,35 @@ planetTemperature' t planet =
     (orbitradius (orbit planet)) 
     (planettype planet)
 
-planetTemperature :: Star a -> Planet a -> Temperature -- TODO: take other stars in starsystem into account
-planetTemperature star = planetTemperature' (temperature star)
+planetTemperature :: StarSystem a -> Planet a -> Temperature
+planetTemperature ss p = let ts = map temperature ((M.elems . stars) ss) in sum $ map (flip planetTemperature' p) ts
 
-sustainsLife :: Star a -> Planet a -> Bool
-sustainsLife s p = 
+sustainsLife :: StarSystem a -> Planet a -> Bool
+sustainsLife ss p = 
   planettype p == RockyPlanet WaterWeatherSystem && 
   planetMass p > 0.01  && 
   planetMass p < 20.0  && 
-  planetTemperature s p < 320 && 
-  planetTemperature s p > 250
+  planetTemperature ss p < 320 && 
+  planetTemperature ss p > 250
 
 planetMass :: Planet a -> Flt
 planetMass = bodymass . physics
 
 starPlanetPairs :: Galaxy a -> [(Star a, Planet a)]
 starPlanetPairs g = unroll (zip (allStars g) (map (M.elems . planets) (allStars g)))
+
+planetStars :: Galaxy a -> [([Star a], Planet a)]
+planetStars g = 
+  let ss = (M.elems . starsystems) g
+      x  = concatMap planetsInStarSystem ss
+      f = map (\(ss, p) -> ((M.elems . stars) ss, p))
+  in f x
+
+planetsWithStarSystemInGalaxy :: Galaxy a -> [(StarSystem a, Planet a)]
+planetsWithStarSystemInGalaxy g = concatMap planetsInStarSystem ((M.elems . starsystems) g)
+
+planetsInStarSystem :: StarSystem a -> [(StarSystem a, Planet a)]
+planetsInStarSystem ss = zip (repeat ss) (((concatMap M.elems . map planets) . M.elems . stars) ss)
 
 allStars :: Galaxy a -> [Star a]
 allStars g = concatMap (M.elems . stars) ((M.elems . starsystems) g)
@@ -93,8 +106,35 @@ unroll :: [(a, [b])] -> [(a, b)]
 unroll []           = []
 unroll ((a, bs):xs) = (zip (repeat a) bs) ++ (unroll xs)
 
-planetTemperatures :: Star a -> [Temperature]
-planetTemperatures s = map (planetTemperature s) ((M.elems . planets) s)
+planetTemperatures :: Star a -> StarSystem a -> [Temperature]
+planetTemperatures s ss = map (planetTemperature ss) ((M.elems . planets) s)
+
+linkStarSystemToPlanet :: (Eq a) => StarSystem a -> Planet a -> Maybe (Star a)
+linkStarSystemToPlanet ss p = 
+  let l = filter (\s -> p `elem` (M.elems (planets s))) ((M.elems . stars) ss)
+  in if null l then Nothing else Just $ head l
+
+firstMaybe :: (a -> Maybe b) -> [a] -> Maybe b
+firstMaybe f l = listToMaybe $ mapMaybe f l
+
+findZipperGalaxyToPlanet :: (Eq a) => Planet a -> Galaxy a -> Maybe (GalaxyZipper a)
+findZipperGalaxyToPlanet p g = firstMaybe (findZipperStarSystemToPlanet p g) (M.elems (starsystems g))
+
+findZipperStarSystemToPlanet :: (Eq a) => Planet a -> Galaxy a -> StarSystem a -> Maybe (GalaxyZipper a)
+findZipperStarSystemToPlanet p g ss = firstMaybe (findZipperStarToPlanet p g ss) (M.elems (stars ss))
+
+findZipperStarToPlanet :: (Eq a) => Planet a -> Galaxy a -> StarSystem a -> Star a -> Maybe (GalaxyZipper a)
+findZipperStarToPlanet p g ss s = 
+  let pls = (M.elems . planets) s
+  in if p `elem` pls
+       then Just (g, Just (ss, Just (s, [p])))
+       else firstMaybe (findZipperPlanetToPlanet p g ss s) pls
+
+findZipperPlanetToPlanet :: (Eq a) => Planet a -> Galaxy a -> StarSystem a -> Star a -> Planet a -> Maybe (GalaxyZipper a)
+findZipperPlanetToPlanet p g ss s p' = 
+  if p `elem` (M.elems . satellites) p'
+    then Just (g, Just (ss, Just (s, [p, p'])))
+    else Nothing
 
 randomRM :: (RandomGen g, Random a) => (a, a) -> State g a
 randomRM v = do

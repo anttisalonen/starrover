@@ -85,7 +85,8 @@ numGasGiantsInGalaxy g = length $ (filter isGasGiant) (bodiesInGalaxy g)
 numWaterWeatherSystemBodiesInGalaxy :: Galaxy a -> Int
 numWaterWeatherSystemBodiesInGalaxy = numRockyBodiesByAtmosphere WaterWeatherSystem
 numNoAtmosphereBodiesInGalaxy g = numBodiesByPlanetType NoAtmosphere g + numBodiesByPlanetType Planetoid g
-numHabitableBodiesInGalaxy g = length $ filter (uncurry sustainsLife) (starPlanetPairs g)
+numHabitableBodiesInGalaxy :: Galaxy a -> Int
+numHabitableBodiesInGalaxy g = length $ filter (uncurry sustainsLife) (planetsWithStarSystemInGalaxy g)
 
 showPerc :: Int -> Int -> String
 showPerc a b = printf " (%.2f%%)" (100.0 * (fromIntegral a / fromIntegral b) :: Float)
@@ -103,7 +104,7 @@ medBodyMassInGalaxy = median . planetMassesInGalaxy
 
 avgBodyMassInGalaxy = average . planetMassesInGalaxy
 
-planetTemperaturesInGalaxy g = concatMap planetTemperatures (starsInGalaxy g)
+planetTemperaturesInGalaxy g = map (uncurry planetTemperature) (planetsWithStarSystemInGalaxy g)
 
 minBodyTemperatureInGalaxy = kelvinToCelsius . minimum . planetTemperaturesInGalaxy
 

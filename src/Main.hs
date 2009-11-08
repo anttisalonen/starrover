@@ -82,17 +82,17 @@ starInfo s z = starinfo ++ "\n" ++ planetinfo
   where starinfo = "Star name: " ++ name s
         planetinfo = case satelliteInZipper z of
                        Just _  -> ""
-                       Nothing -> getXInfoFromY s planets (genTitle (infoSatellite s))
+                       Nothing -> getXInfoFromY s planets (genTitle (infoSatellite z))
 
 satelliteInfo s z = satinfo ++ satsinfo
-  where satinfo = infoSatellite (fromJust (starInZipper z)) s
+  where satinfo = (infoSatellite z) s
         satsinfo = if (M.null (satellites s)) then "" else "\n" ++ getXInfoFromY s satellites (genTitle (flip satelliteInfo z))
 
-infoSatellite :: Star a -> Planet a -> String
-infoSatellite s p = 
+infoSatellite :: GalaxyZipper a -> Planet a -> String
+infoSatellite z p = 
   "Name: " ++ name p ++ " - " ++
   "Orbit radius: " ++ (show3f . orbitradius . orbit) p ++ " - " ++
-  "Temperature (Celsius): " ++ show ((kelvinToCelsius . planetTemperature s) p) ++ " - " ++
+  "Temperature (Celsius): " ++ show (kelvinToCelsius $ (planetTemperature (fromJust (starSystemInZipper z)) p)) ++ " - " ++
   "Mass: " ++ (show3f . bodymass . physics) p ++ " - " ++ 
   "Number of satellites: " ++ (show . M.size . satellites) p ++ " - " ++
   "Type: " ++ (show . planettype) p

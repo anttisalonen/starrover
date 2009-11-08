@@ -97,14 +97,21 @@ getProbTableValue n ((k, v):xs) = if n <= k then v else getProbTableValue n xs
 randomStarTemperature :: (RandomGen g) => SpectralType -> State g Temperature
 randomStarTemperature s = randomRM (specTempRange s)
 
+-- separate [2,4,6,8,10] == [2,4,6,10]
+-- separate [5..10] == [5,8]
+separate :: (Fractional a, Ord a) => [a] -> [a]
+separate []       = []
+separate [x]      = [x]
+separate (x:y:xs) = if x * 1.5 > y then separate (x:xs) else x:(separate (y:xs))
+
 createStar :: (RandomGen g) => (Planet () -> State g a) -> String -> Flt -> Orbit -> State g (Star a)
 createStar genfunc name maxplanetorbitradius orbit = do
   r <- randomRM (0, 1)
   let s = getProbTableValue r starprobs
   t <- randomStarTemperature s
-  numplanets <- randomRM (0, min 128 (floor (maxplanetorbitradius / 2)))
+  numplanets <- randomRM (0, 128)
   let planetnames = bodyNames name
-  planetorbitradiuses <- sort `fmap` replicateM numplanets (randomRM (0.1, maxplanetorbitradius))
+  planetorbitradiuses <- separate `fmap` sort `fmap` replicateM numplanets (randomRM (0.1, maxplanetorbitradius))
   -- TODO: make sure orbits aren't too close to each other
   planets <- zipWithM (createPlanet genfunc t) planetnames planetorbitradiuses
   return $! Star name t orbit (stdMap (filter (\p -> planetTemperature' t p > 20 && planetTemperature' t p < t `div` 2) planets))
@@ -226,14 +233,17 @@ choose l = do
   i <- randomRM (0, n - 1)
   return (l !! i)
 
-createLife :: (RandomGen g) => Galaxy a -> String -> State g (Maybe (Civilization a))
+createLife :: (Eq a, RandomGen g) => Galaxy a -> String -> State g (Maybe (Civilization a))
 createLife g cname = do
-  let ps = filter (uncurry sustainsLife) (starPlanetPairs g)
+  let ps = filter (uncurry sustainsLife) (planetsWithStarSystemInGalaxy g)
   if null ps 
     then return Nothing
     else do
-      (s, p) <- choose ps
-      return $! Just $ Civilization cname ([Settlement p s])
+      (ss, p) <- choose ps
+      let mzip = findZipperGalaxyToPlanet p g
+      case mzip of
+        Nothing -> return Nothing
+        Just s  -> return $! Just $ Civilization cname ([Settlement s])
 
 testCiv :: Maybe (Civilization Terrain)
 testCiv = 

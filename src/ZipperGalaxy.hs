@@ -6,8 +6,6 @@ import qualified Data.Map as M
 import DataTypes
 import DataFunction
 
-type GalaxyZipper a = (Galaxy a, Maybe (StarSystem a, Maybe (Star a, [Planet a])))
-
 galaxyInZipper :: GalaxyZipper a -> Galaxy a
 galaxyInZipper (g, _) = g
 
