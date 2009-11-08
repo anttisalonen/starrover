@@ -248,5 +248,5 @@ createLife g cname = do
 testCiv :: Maybe (Civilization Terrain)
 testCiv = 
   let r = mkStdGen 20
-  in evalState (createLife testGalaxy "humans") r
+  in evalState (createLife (testRandomGalaxy 21 256) "humans") r
 
