@@ -109,12 +109,12 @@ createStar genfunc name maxplanetorbitradius orbit = do
   r <- randomRM (0, 1)
   let s = getProbTableValue r starprobs
   t <- randomStarTemperature s
-  numplanets <- randomRM (0, 128)
+  numplanets <- randomRM (64, 128)
   let planetnames = bodyNames name
-  planetorbitradiuses <- separate `fmap` sort `fmap` replicateM numplanets (randomRM (0.1, maxplanetorbitradius))
+  planetorbitradiuses <- separate `fmap` sort `fmap` replicateM numplanets (randomRM (0.01, min (fromIntegral t * 2 / 100) maxplanetorbitradius))
   -- TODO: make sure orbits aren't too close to each other
   planets <- zipWithM (createPlanet genfunc t) planetnames planetorbitradiuses
-  return $! Star name t orbit (stdMap (filter (\p -> planetTemperature' t p > 20 && planetTemperature' t p < t `div` 2) planets))
+  return $! Star name t orbit (stdMap (filter (\p -> planetTemperature' t p > 30 && planetTemperature' t p < t `div` 4) planets))
 
 namesFromBasenameCap :: String -> [String]
 namesFromBasenameCap n = zipWith (++) (repeat (n ++ " ")) (map (:[]) ['A' .. 'Z'])

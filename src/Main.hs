@@ -13,7 +13,7 @@ import ZipperGalaxy
 
 main :: IO ()
 main = do
-  let g = testRandomGalaxy 20 8
+  let g = testRandomGalaxy 21 16
   let stats = galaxyStats g
   putStrLn (galaxyStats g)
   browseGalaxy (g, Nothing)
@@ -73,7 +73,7 @@ startitle s = printf
     "%s - Type: %s - Temperature (Celsius): %6d - Orbit radius: %.3f - %d planets" 
       (name s) 
       (show (spectralType s)) 
-      ((kelvinToCelsius . temperature) s) 
+      ((round100 . kelvinToCelsius . temperature) s) 
       ((orbitradius . starorbit) s)
       (M.size (planets s))
 

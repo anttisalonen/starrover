@@ -71,6 +71,9 @@ planetTemperature' t planet =
 planetTemperature :: StarSystem a -> Planet a -> Temperature
 planetTemperature ss p = let ts = map temperature ((M.elems . stars) ss) in sum $ map (flip planetTemperature' p) ts
 
+round100 :: Int -> Int
+round100 i = i `div` 100 * 100
+
 sustainsLife :: StarSystem a -> Planet a -> Bool
 sustainsLife ss p = 
   planettype p == RockyPlanet WaterWeatherSystem && 
