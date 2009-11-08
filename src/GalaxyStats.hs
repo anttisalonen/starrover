@@ -4,8 +4,11 @@ where
 import qualified Data.Map as M
 import Data.Ratio
 import Text.Printf
-import DataTypes
+
+import Galaxy
 import DataFunction
+import Statistics
+import Named
 
 numStarSystemsInGalaxy :: Galaxy a -> Int
 numStarSystemsInGalaxy = M.size . starsystems

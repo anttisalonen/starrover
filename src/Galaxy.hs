@@ -1,15 +1,10 @@
-module DataTypes
+module Galaxy
 where
 
 import qualified Data.Map as M
 
-data Good = Good { goodname :: String }
-    deriving (Eq, Read, Show)
-
-data Terrain = Terrain { goods :: [Good] }
-    deriving (Eq, Read, Show)
-
-type Flt = Float
+import Math
+import Named
 
 type Temperature = Int
 
@@ -29,11 +24,6 @@ data Atmosphere = Nitrogen
                 | SulphurDioxide
     deriving (Eq, Read, Show, Enum, Bounded)
 
-type Ressource = (Good, Int)
-
-data Building = Building { buildingname :: String }
-    deriving (Eq, Read, Show)
-
 data Orbit = Orbit { orbitradius :: Flt
                    , initialpos :: Flt
                    , eccentricity :: Flt
@@ -44,16 +34,6 @@ data Orbit = Orbit { orbitradius :: Flt
 
 data BodyPhysics = BodyPhysics { bodymass :: Flt
                                }
-    deriving (Eq, Read, Show)
-
-data Civilization a = Civilization { civname :: String
-                                   , settlements :: [Settlement a]
-                                   }
-    deriving (Eq, Read, Show)
-
-type GalaxyZipper a = (Galaxy a, Maybe (StarSystem a, Maybe (Star a, [Planet a])))
-
-data Settlement a = Settlement { settlementzipper :: GalaxyZipper a }
     deriving (Eq, Read, Show)
 
 data Planet a = Planet { planetname :: String
@@ -73,8 +53,6 @@ data SpectralType = SpectralTypeB
                   | SpectralTypeM
     deriving (Eq, Read, Show, Enum, Bounded)
 
-type Vector3 = (Flt, Flt, Flt)
-
 data Star a = Star { starname :: String
                    , temperature :: Temperature
                    , starorbit :: Orbit
@@ -92,9 +70,6 @@ data Galaxy a = Galaxy { galaxyname :: String
                        , starsystems :: M.Map Int (StarSystem a)
                        }
     deriving (Eq, Read, Show)
-
-class Named a where
-  name :: a -> String
 
 instance Named (Galaxy a) where
   name = galaxyname

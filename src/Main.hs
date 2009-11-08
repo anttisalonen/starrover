@@ -8,7 +8,9 @@ import Data.Maybe
 import DataCreate
 import DataFunction
 import GalaxyStats
-import DataTypes
+import Galaxy
+import Named
+import Utils
 import ZipperGalaxy
 
 main :: IO ()

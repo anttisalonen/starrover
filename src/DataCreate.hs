@@ -7,27 +7,13 @@ import Control.Monad.State
 import System.Random
 import qualified Data.Map as M
 
-import DataTypes
+import Galaxy
+import Civilization
 import DataFunction
-
-{-
-moon :: Planet
-moon = Planet a "Moon" 0.015 0.8 1.0 0.0 0.0 10.0 NoAtmosphere []
-
-earth :: Planet
-earth = Planet a "Earth" 1.0 1.0 1.0 0 0.0 29.0 (Oxygen 1.0) [moon]
--}
-
-{-
-solStar a :: Star
-solStar a = Star a "Sol" 5800 [earth]
-
-solSS :: StarSystem
-solSS = StarSystem a "Sol" (0, 0, 0) [solStar]
-
-milkyWay :: Galaxy
-milkyWay = Galaxy a [solSS]
--}
+import Statistics
+import Math
+import Utils
+import ZipperGalaxy
 
 gasGiantByMass :: Flt -> PlanetType
 gasGiantByMass mass | mass < 20.0  = SmallGasGiant
@@ -97,13 +83,6 @@ getProbTableValue n ((k, v):xs) = if n <= k then v else getProbTableValue n xs
 randomStarTemperature :: (RandomGen g) => SpectralType -> State g Temperature
 randomStarTemperature s = randomRM (specTempRange s)
 
--- separate [2,4,6,8,10] == [2,4,6,10]
--- separate [5..10] == [5,8]
-separate :: (Fractional a, Ord a) => [a] -> [a]
-separate []       = []
-separate [x]      = [x]
-separate (x:y:xs) = if x * 1.5 > y then separate (x:xs) else x:(separate (y:xs))
-
 createStar :: (RandomGen g) => (Planet () -> State g a) -> String -> Flt -> Orbit -> State g (Star a)
 createStar genfunc name maxplanetorbitradius orbit = do
   r <- randomRM (0, 1)
@@ -112,7 +91,6 @@ createStar genfunc name maxplanetorbitradius orbit = do
   numplanets <- randomRM (64, 128)
   let planetnames = bodyNames name
   planetorbitradiuses <- separate `fmap` sort `fmap` replicateM numplanets (randomRM (0.01, min (fromIntegral t * 2 / 100) maxplanetorbitradius))
-  -- TODO: make sure orbits aren't too close to each other
   planets <- zipWithM (createPlanet genfunc t) planetnames planetorbitradiuses
   return $! Star name t orbit (stdMap (filter (\p -> planetTemperature' t p > 30 && planetTemperature' t p < t `div` 4) planets))
 
@@ -128,15 +106,6 @@ namesFromBasenameNum n = zipWith (++) (repeat (n ++ " ")) (map show [1..])
 createOrbit :: (RandomGen g) => Flt -> State g Orbit
 createOrbit oradius = return $! Orbit oradius 0 0 1 0
 
--- distances [2, 3, 68, 70, 300, 4000] = [1, 1, 2, 2, 230, 3700]
-distances :: (Num a, Ord a) => [a] -> [a]
-distances []         = []
-distances [a]        = [0]
-distances [a, b]     = [b - a, b - a]
-distances (a:b:c:ds) = b - a : go a b c ds
-  where go a b c [] = min (b - a) (c - b) : c - b : []
-        go a b c ds = min (b - a) (c - b) : go b c (head ds) (tail ds)
-
 noOrbit :: Orbit
 noOrbit = Orbit 0 0 0 1 0
 
@@ -151,15 +120,6 @@ createStars genfunc basename numstars = do
   let dists = map (/4) (distances orbitradiuses)
   stars <- zipWith3M (createStar genfunc) names dists orbits
   return $! stars
-
-zipWith3M :: (Monad m) => (a -> b -> c -> m d) -> [a] -> [b] -> [c] -> m [d]
-zipWith3M f [] _ _ = return []
-zipWith3M f _ [] _ = return []
-zipWith3M f _ _ [] = return []
-zipWith3M f (a:as) (b:bs) (c:cs) = do
-  n <- f a b c
-  rest <- zipWith3M f as bs cs
-  return (n:rest)
 
 createStarSystem :: (RandomGen g) => (Planet () -> State g a) -> String -> Vector3 -> State g (StarSystem a)
 createStarSystem genfunc ssname sspos = do
@@ -226,12 +186,6 @@ testRandomGalaxy :: Int -> Int -> Galaxy Terrain
 testRandomGalaxy v numsys =
   let r = mkStdGen v
   in evalState (createGalaxy (\_ -> return (Terrain [])) "milky way" (take numsys $ nearsystems ++ map show [1..numsys])) r
-
-choose :: (RandomGen g) => [a] -> State g a
-choose l = do
-  let n = length l
-  i <- randomRM (0, n - 1)
-  return (l !! i)
 
 createLife :: (Eq a, RandomGen g) => Galaxy a -> String -> State g (Maybe (Civilization a))
 createLife g cname = do
