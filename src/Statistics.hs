@@ -3,6 +3,7 @@ where
 
 import Control.Monad.State
 import System.Random
+import Data.List
 
 randomRM :: (RandomGen g, Random a) => (a, a) -> State g a
 randomRM v = do
@@ -57,10 +58,7 @@ averageInt l = go 0 0 l
   where go acc len []     = acc `div` len
         go acc len (x:xs) = go (acc + x) (len + 1) xs
 
-median :: (Num a) => [a] -> a
-median [] = 0
-median (p:ps) = go False p ps
-   where go _ x []     = x
-         go False x (_:ns) = go True  x ns
-         go True  _ (n:ns) = go False n ns
+median :: (Ord a, Num a) => [a] -> a
+median [] = error "Median on empty list"
+median l = (sort l) !! (length l `div` 2)
 
