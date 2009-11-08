@@ -16,7 +16,7 @@ main = do
 
 type Input a = Maybe (GalaxyZipper a)
 
-getInput :: GalaxyZipper a -> IO (Input a)
+getInput :: (Show a) => GalaxyZipper a -> IO (Input a)
 getInput z = do
   putStrLn (genInfo z)
   c <- getLine

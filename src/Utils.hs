@@ -76,4 +76,6 @@ show2f f = printf "%.2f" f
 show3f :: Float -> String
 show3f f = printf "%.3f" f
 
+mapMaybeM :: (Monad m) => (a -> m (Maybe b)) -> [a] -> m [b]
+mapMaybeM f l = mapM f l >>= return . catMaybes
 

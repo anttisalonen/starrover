@@ -184,11 +184,45 @@ testGalaxy = testRandomGalaxy 20 16
 testRandomGalaxy :: Int -> Int -> Galaxy Terrain
 testRandomGalaxy v numsys =
   let r = mkStdGen v
-  in evalState (createGalaxy (\_ -> return (Terrain [])) "milky way" (take numsys $ nearsystems ++ map show [1..numsys])) r
+  in evalState (createGalaxy (createTerrain stdGoods) "milky way" (take numsys $ nearsystems ++ map show [1..numsys])) r
+
+createTerrain :: (RandomGen g) => [Good] -> Planet () -> State g Terrain
+createTerrain gs p = 
+  case planettype p of
+    Planetoid         -> createRockyTerrain gs p
+    NoAtmosphere      -> createRockyTerrain gs p
+    RockyPlanet _     -> createRockyTerrain gs p
+    SmallGasGiant     -> return (Terrain [])
+    MediumGasGiant    -> return (Terrain [])
+    LargeGasGiant     -> return (Terrain [])
+    VeryLargeGasGiant -> return (Terrain [])
+
+createRockyTerrain :: (RandomGen g) => [Good] -> Planet () -> State g Terrain
+createRockyTerrain gs p = do
+  massmult <- randomRM (0, 1000 * planetMass p)
+  gs <- mapMaybeM (createNaturalGood massmult (planettype p)) gs
+  return (Terrain gs)
+
+createNaturalGood :: (RandomGen g) => Flt -> PlanetType -> Good -> State g (Maybe (Good, Int))
+createNaturalGood massmult pt g = 
+  case natural g of
+    Nothing                       -> return Nothing
+    Just (Natural atms _ initial) -> do
+      let atmNeeded = not $ null atms
+      let invAtm = if not atmNeeded 
+                     then False
+                     else case pt of
+                       RockyPlanet a -> a `notElem` atms
+                       _             -> True
+      if invAtm 
+        then return Nothing
+        else do
+          mult <- randomRM (0, initial)
+          return (Just (g, floor (mult * massmult)))
 
 createLife :: (RandomGen g) => Galaxy Terrain -> String -> State g (Maybe Civilization)
 createLife g cname = do
-  let ps = filter (uncurry sustainsLife) (planetsWithStarSystemInGalaxy g)
+  let ps = filter (uncurry sustainsLife) (starPlanetPairs g)
   if null ps 
     then return Nothing
     else do

@@ -53,22 +53,40 @@ planetTemperature'' t d planettype = floor $ 300 * (((fromIntegral t) / 6000) ^ 
            VeryLargeGasGiant -> 1.0
 
 planetTemperature' :: Temperature -> Planet a -> Temperature
-planetTemperature' t planet =
+planetTemperature' t pl =
   planetTemperature''
     t
-    (orbitradius (orbit planet)) 
-    (planettype planet)
+    (orbitradius (orbit pl))
+    (planettype pl)
 
-planetTemperature :: StarSystem a -> Planet a -> Temperature
-planetTemperature ss p = let ts = map temperature ((M.elems . stars) ss) in sum $ map (flip planetTemperature' p) ts
+planetTemperatureByStar :: Star a -> Planet a -> Temperature
+planetTemperatureByStar s p = planetTemperature' (temperature s) p
 
-sustainsLife :: StarSystem a -> Planet a -> Bool
-sustainsLife ss p = 
+planetTemperatureByStarSystem :: (Eq a) => StarSystem a -> Planet a -> Temperature
+planetTemperatureByStarSystem ss p = case starInSystemByPlanet p ss of
+                                       Nothing -> 0
+                                       Just s  -> planetTemperatureByStar s p
+
+planetTemperature = planetTemperatureByStar
+
+starsInsidePlanetOrbit :: (Eq a) => StarSystem a -> Planet a -> [Star a]
+starsInsidePlanetOrbit systems p = 
+  let sts = (M.elems . stars) systems
+  in dropWhile (planetAroundStar p) (reverse sts)
+
+planetAroundStar :: (Eq a) => Planet a -> Star a -> Bool
+planetAroundStar p s = p `elem` (M.elems (planets s))
+
+starInSystemByPlanet :: (Eq a) => Planet a -> StarSystem a -> Maybe (Star a)
+starInSystemByPlanet p ss = listToMaybe (filter (planetAroundStar p) ((M.elems . stars) ss))
+
+sustainsLife :: Star a -> Planet a -> Bool
+sustainsLife s p = 
   planettype p == RockyPlanet WaterWeatherSystem && 
   planetMass p > 0.01  && 
   planetMass p < 20.0  && 
-  planetTemperature ss p < 320 && 
-  planetTemperature ss p > 250
+  planetTemperature s p < 320 && 
+  planetTemperature s p > 250
 
 planetMass :: Planet a -> Flt
 planetMass = bodymass . physics
@@ -92,8 +110,10 @@ planetsInStarSystem ss = zip (repeat ss) (((concatMap M.elems . map planets) . M
 allStars :: Galaxy a -> [Star a]
 allStars g = concatMap (M.elems . stars) ((M.elems . starsystems) g)
 
+{-
 planetTemperatures :: Star a -> StarSystem a -> [Temperature]
 planetTemperatures s ss = map (planetTemperature ss) ((M.elems . planets) s)
+-}
 
 linkStarSystemToPlanet :: (Eq a) => StarSystem a -> Planet a -> Maybe (Star a)
 linkStarSystemToPlanet ss p = 

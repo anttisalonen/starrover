@@ -31,13 +31,13 @@ findZipperPlanetToPlanet p g ss s p' =
     then Just (g, Just (ss, Just (s, [p, p'])))
     else Nothing
 
-genInfo :: GalaxyZipper a -> String
+genInfo :: (Show a) => GalaxyZipper a -> String
 genInfo z = galaxyInfo z ++ 
   (smallInfo z starSystemInZipper starSystemInfo) ++
   (smallInfo z starInZipper starInfo) ++
   (smallInfo z satelliteInZipper satelliteInfo)
 
-galaxyInfo :: GalaxyZipper a -> String
+galaxyInfo :: (Show a) => GalaxyZipper a -> String
 galaxyInfo z = gname ++ "\n" ++ sysinfo
   where g       = galaxyInZipper z
         gname   = "Galaxy name: " ++ name g
@@ -84,15 +84,16 @@ starInfo s z = starinfo ++ "\n" ++ planetinfo
                        Just _  -> ""
                        Nothing -> getXInfoFromY s planets (genTitle (infoSatellite z))
 
-satelliteInfo s z = satinfo ++ satsinfo
+satelliteInfo s z = satinfo ++ satsinfo ++ (if null datainfo then "" else "\n" ++ datainfo)
   where satinfo = (infoSatellite z) s
         satsinfo = if (M.null (satellites s)) then "" else "\n" ++ getXInfoFromY s satellites (genTitle (flip satelliteInfo z))
+        datainfo = show (info s)
 
-infoSatellite :: GalaxyZipper a -> Planet a -> String
+infoSatellite :: (Show a) => GalaxyZipper a -> Planet a -> String
 infoSatellite z p = 
   "Name: " ++ name p ++ " - " ++
   "Orbit radius: " ++ (show3f . orbitradius . orbit) p ++ " - " ++
-  "Temperature (Celsius): " ++ show (kelvinToCelsius $ (planetTemperature (fromJust (starSystemInZipper z)) p)) ++ " - " ++
+  "Temperature (Celsius): " ++ show (kelvinToCelsius $ (planetTemperature (fromJust (starInZipper z)) p)) ++ " - " ++
   "Mass: " ++ (show3f . bodymass . physics) p ++ " - " ++ 
   "Number of satellites: " ++ (show . M.size . satellites) p ++ " - " ++
   "Type: " ++ (show . planettype) p
