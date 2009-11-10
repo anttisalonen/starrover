@@ -67,7 +67,7 @@ planetTemperatureByStarSystem ss p = case starInSystemByPlanet p ss of
                                        Nothing -> 0
                                        Just s  -> planetTemperatureByStar s p
 
-planetTemperature = planetTemperatureByStar
+planetTemperature = planettemperature
 
 starsInsidePlanetOrbit :: (Eq a) => StarSystem a -> Planet a -> [Star a]
 starsInsidePlanetOrbit systems p = 
@@ -80,13 +80,13 @@ planetAroundStar p s = p `elem` (M.elems (planets s))
 starInSystemByPlanet :: (Eq a) => Planet a -> StarSystem a -> Maybe (Star a)
 starInSystemByPlanet p ss = listToMaybe (filter (planetAroundStar p) ((M.elems . stars) ss))
 
-sustainsLife :: Star a -> Planet a -> Bool
-sustainsLife s p = 
+sustainsLife :: Planet a -> Bool
+sustainsLife p = 
   planettype p == RockyPlanet WaterWeatherSystem && 
   planetMass p > 0.01  && 
   planetMass p < 20.0  && 
-  planetTemperature s p < 320 && 
-  planetTemperature s p > 250
+  planetTemperature p < 320 && 
+  planetTemperature p > 250
 
 planetMass :: Planet a -> Flt
 planetMass = bodymass . physics
@@ -109,6 +109,9 @@ planetsInStarSystem ss = zip (repeat ss) (((concatMap M.elems . map planets) . M
 
 allStars :: Galaxy a -> [Star a]
 allStars g = concatMap (M.elems . stars) ((M.elems . starsystems) g)
+
+allPlanets :: Galaxy a -> [Planet a]
+allPlanets g = concatMap (M.elems . planets) (allStars g)
 
 {-
 planetTemperatures :: Star a -> StarSystem a -> [Temperature]

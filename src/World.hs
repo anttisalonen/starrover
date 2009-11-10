@@ -1,11 +1,12 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
 module World
 where
 
-import DataTypes
+import Galaxy
 
 data World = World { galaxy  :: Galaxy
                    , time    :: GalaxyTime
-                   , nations :: [Nation]
+                   , civilizations :: [Civilization]
                    , player  :: Player
                    }
 
@@ -30,5 +31,10 @@ data Contract = Embargo Nation
 data State = State { colonies :: [Colony] }
 
 data Colony = Colony { planet :: Planet }
+
+class TreeContainer a b k c where
+  content :: a b k c -> b
+  child :: (TreeContainer x y z w) => a b k c -> k -> x y z w
+
 
 data Player = Player {playername :: String }

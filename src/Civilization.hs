@@ -3,6 +3,7 @@ where
 
 import qualified Data.Map as M
 import Data.Maybe
+import Data.Tree
 
 import Galaxy
 import Math

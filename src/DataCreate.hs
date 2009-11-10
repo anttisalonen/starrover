@@ -47,9 +47,10 @@ createSatellite minmass maxmass genfunc startemp name orbitradius = do
   orbit <- createOrbit orbitradius
   mass <- randomRM (minmass, maxmass)
   atmosphere <- createPlanetType mass startemp orbitradius
-  let emptyplanet = Planet name orbit (BodyPhysics mass) atmosphere M.empty ()
+  let ptemp = planetTemperature'' startemp orbitradius atmosphere
+  let emptyplanet = Planet name orbit (BodyPhysics mass) atmosphere ptemp M.empty ()
   cont <- genfunc emptyplanet
-  return $! Planet name orbit (BodyPhysics mass) atmosphere M.empty cont
+  return $! Planet name orbit (BodyPhysics mass) atmosphere ptemp M.empty cont
 
 createPlanet :: (RandomGen g) => (Planet () -> State g a) -> Temperature -> String -> Flt -> State g (Planet a)
 createPlanet genfunc startemp name orbitradius = do
@@ -63,8 +64,9 @@ createPlanet genfunc startemp name orbitradius = do
   atmosphere <- createPlanetType mass startemp orbitradius
   numsatellites <- if mass < 1.0 then return 0 else randomRM (0 :: Int, min 16 (floor (sqrt mass)))
   satellites <- zipWithM (createSatellite (0.00001 * mass) (0.01 * mass) genfunc startemp) (bodyNames name) (replicate numsatellites orbitradius)
-  cont <- genfunc (Planet name orbit (BodyPhysics mass) atmosphere M.empty ())
-  return $! Planet name orbit (BodyPhysics mass) atmosphere (stdMap satellites) cont
+  let temp = planetTemperature'' startemp orbitradius atmosphere
+  cont <- genfunc (Planet name orbit (BodyPhysics mass) atmosphere temp M.empty ())
+  return $! Planet name orbit (BodyPhysics mass) atmosphere temp (stdMap satellites) cont
 
 stdMap :: [a] -> M.Map Int a
 stdMap xs = M.fromList (zip [1..] xs)
@@ -222,11 +224,11 @@ createNaturalGood massmult pt g =
 
 createLife :: (RandomGen g) => Galaxy Terrain -> String -> State g (Maybe Civilization)
 createLife g cname = do
-  let ps = filter (uncurry sustainsLife) (starPlanetPairs g)
+  let ps = filter sustainsLife (allPlanets g)
   if null ps 
     then return Nothing
     else do
-      (ss, p) <- choose ps
+      p <- choose ps
       let mzip = findZipperGalaxyToPlanet p g
       case mzip of
         Nothing -> return Nothing

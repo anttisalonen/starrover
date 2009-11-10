@@ -40,6 +40,7 @@ data Planet a = Planet { planetname :: String
                        , orbit :: Orbit
                        , physics :: BodyPhysics
                        , planettype :: PlanetType
+                       , planettemperature :: Temperature
                        , satellites :: M.Map Int (Planet a)
                        , info :: a
                        }
