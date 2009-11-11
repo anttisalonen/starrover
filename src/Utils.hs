@@ -2,8 +2,6 @@ module Utils
 where
 
 import Data.Maybe
-import Control.Monad.State
-import System.Random
 import Text.Printf
 
 import Math
@@ -63,12 +61,6 @@ zipWith3M f (a:as) (b:bs) (c:cs) = do
   n <- f a b c
   rest <- zipWith3M f as bs cs
   return (n:rest)
-
-choose :: (RandomGen g) => [a] -> State g a
-choose l = do
-  let n = length l
-  i <- randomRM (0, n - 1)
-  return (l !! i)
 
 show2f :: Float -> String
 show2f f = printf "%.2f" f

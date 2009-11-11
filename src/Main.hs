@@ -10,7 +10,7 @@ import ZipperGalaxyUtils
 
 main :: IO ()
 main = do
-  let g = testRandomGalaxy 21 16
+  let g = testRandomGalaxy 22 24
   putStrLn (galaxyStats g)
   browseGalaxy (g, Nothing)
 

@@ -1,3 +1,4 @@
+{-# LANGUAGE Rank2Types #-} 
 module DataCreate
 where
 
@@ -20,14 +21,14 @@ gasGiantByMass mass | mass < 20.0  = SmallGasGiant
                     | mass < 400.0 = LargeGasGiant
                     | otherwise    = VeryLargeGasGiant
 
-createPlanetType :: (RandomGen g) => Flt -> Temperature -> Flt -> State g PlanetType
+createPlanetType :: Flt -> Temperature -> Flt -> Rnd PlanetType
 createPlanetType mass startemp orbitradius = do
   if mass < 0.001 then return Planetoid
    else if mass < 0.01 then return NoAtmosphere
    else if mass > 15.0 then return (gasGiantByMass mass)
    else createRockyPlanetAtmosphere mass startemp orbitradius
 
-createRockyPlanetAtmosphere :: (RandomGen g) => Flt -> Temperature -> Flt -> State g PlanetType
+createRockyPlanetAtmosphere :: Flt -> Temperature -> Flt -> Rnd PlanetType
 createRockyPlanetAtmosphere mass startemp orbitradius = do
   weather <- randomRM (1, 100 :: Int)
   let atm1 = if weather < 5
@@ -42,7 +43,7 @@ createRockyPlanetAtmosphere mass startemp orbitradius = do
       RockyPlanet MethaneWeatherSystem -> if (planetTemperature'' startemp orbitradius atm1) > 600 then RockyPlanet Nitrogen else atm1
       _                                -> atm1
 
-createSatellite :: (RandomGen g) => Flt -> Flt -> (Planet () -> State g a) -> Temperature -> String -> Flt -> State g (Planet a)
+createSatellite :: Flt -> Flt -> (Planet () -> Rnd a) -> Temperature -> String -> Flt -> Rnd (Planet a)
 createSatellite minmass maxmass genfunc startemp name orbitradius = do
   orbit <- createOrbit orbitradius
   mass <- randomRM (minmass, maxmass)
@@ -52,7 +53,7 @@ createSatellite minmass maxmass genfunc startemp name orbitradius = do
   cont <- genfunc emptyplanet
   return $! Planet name orbit (BodyPhysics mass) atmosphere ptemp M.empty cont
 
-createPlanet :: (RandomGen g) => (Planet () -> State g a) -> Temperature -> String -> Flt -> State g (Planet a)
+createPlanet :: (Planet () -> Rnd a) -> Temperature -> String -> Flt -> Rnd (Planet a)
 createPlanet genfunc startemp name orbitradius = do
   orbit <- createOrbit orbitradius
   gentype <- randomRM (1, 4 :: Int)
@@ -81,10 +82,10 @@ getProbTableValue :: (Ord a) => a -> [(a, b)] -> b
 getProbTableValue n [(_, v)] = v
 getProbTableValue n ((k, v):xs) = if n <= k then v else getProbTableValue n xs
 
-randomStarTemperature :: (RandomGen g) => SpectralType -> State g Temperature
+randomStarTemperature :: SpectralType -> Rnd Temperature
 randomStarTemperature s = randomRM (specTempRange s)
 
-createStar :: (RandomGen g) => (Planet () -> State g a) -> String -> Flt -> Orbit -> State g (Star a)
+createStar :: (Planet () -> Rnd a) -> String -> Flt -> Orbit -> Rnd (Star a)
 createStar genfunc name maxplanetorbitradius orbit = do
   r <- randomRM (0, 1)
   let s = getProbTableValue r starprobs
@@ -104,13 +105,13 @@ namesFromBasenameMin n = zipWith (++) (repeat (n ++ " ")) (map (:[]) ['a' .. 'z'
 namesFromBasenameNum :: String -> [String]
 namesFromBasenameNum n = zipWith (++) (repeat (n ++ " ")) (map show [1..])
 
-createOrbit :: (RandomGen g) => Flt -> State g Orbit
+createOrbit :: Flt -> Rnd Orbit
 createOrbit oradius = return $! Orbit oradius 0 0 1 0
 
 noOrbit :: Orbit
 noOrbit = Orbit 0 0 0 1 0
 
-createStars :: (RandomGen g) => (Planet () -> State g a) -> String -> Int -> State g [Star a]
+createStars :: (Planet () -> Rnd a) -> String -> Int -> Rnd [Star a]
 createStars genfunc basename 1 = do
   s <- createStar genfunc basename 3000 noOrbit
   return [s]
@@ -122,20 +123,22 @@ createStars genfunc basename numstars = do
   stars <- zipWith3M (createStar genfunc) names dists orbits
   return $! stars
 
-createStarSystem :: (RandomGen g) => (Planet () -> State g a) -> String -> Vector3 -> State g (StarSystem a)
+createStarSystem :: (Planet () -> Rnd a) -> String -> Vector3 -> Rnd (StarSystem a)
 createStarSystem genfunc ssname sspos = do
-  singular <- randomRM (False, True)
+  -- http://www.cfa.harvard.edu/news/2006/pr200611.html 
+  -- "Most milky way stars are single"
+  singular <- chance 2 3 
   n <- if singular then return 1 else randomRM (2, 6 :: Int)
   stars <- (createStars genfunc) ssname n
   return $! StarSystem ssname sspos (stdMap stars)
 
-create2DPoint :: (RandomGen g) => (Flt, Flt) -> State g Vector3
+create2DPoint :: (Flt, Flt) -> Rnd Vector3
 create2DPoint (minc, maxc) = do
   x <- randomRM (minc, maxc)
   y <- randomRM (minc, maxc)
   return (x, y, 0)
 
-create3DPoint :: (RandomGen g) => (Flt, Flt) -> State g Vector3
+create3DPoint :: (Flt, Flt) -> Rnd Vector3
 create3DPoint (minc, maxc) = do
   x <- randomRM (minc, maxc)
   y <- randomRM (minc, maxc)
@@ -145,7 +148,7 @@ create3DPoint (minc, maxc) = do
 ssSpacingCoefficient :: Float
 ssSpacingCoefficient = 5
 
-createGalaxy :: (RandomGen g) => (Planet () -> State g a) -> String -> [String] -> State g (Galaxy a)
+createGalaxy :: (Planet () -> Rnd a) -> String -> [String] -> Rnd (Galaxy a)
 createGalaxy genfunc galname ssnames = do
   let numss = length ssnames
   let dim = sqrt (fromIntegral numss) * ssSpacingCoefficient -- TODO: when 3d galaxy, use cbrt
@@ -188,7 +191,7 @@ testRandomGalaxy v numsys =
   let r = mkStdGen v
   in evalState (createGalaxy (createTerrain stdGoods) "milky way" (take numsys $ nearsystems ++ map show [1..numsys])) r
 
-createTerrain :: (RandomGen g) => [Good] -> Planet () -> State g Terrain
+createTerrain :: [Good] -> Planet () -> Rnd Terrain
 createTerrain gs p = 
   case planettype p of
     Planetoid         -> createRockyTerrain gs p
@@ -199,13 +202,13 @@ createTerrain gs p =
     LargeGasGiant     -> return (Terrain [])
     VeryLargeGasGiant -> return (Terrain [])
 
-createRockyTerrain :: (RandomGen g) => [Good] -> Planet () -> State g Terrain
+createRockyTerrain :: [Good] -> Planet () -> Rnd Terrain
 createRockyTerrain gs p = do
   massmult <- randomRM (0, 1000 * planetMass p)
   gs <- mapMaybeM (createNaturalGood massmult (planettype p)) gs
   return (Terrain gs)
 
-createNaturalGood :: (RandomGen g) => Flt -> PlanetType -> Good -> State g (Maybe (Good, Int))
+createNaturalGood :: Flt -> PlanetType -> Good -> Rnd (Maybe (Good, Int))
 createNaturalGood massmult pt g = 
   case natural g of
     Nothing                       -> return Nothing
@@ -222,7 +225,7 @@ createNaturalGood massmult pt g =
           mult <- randomRM (0, initial)
           return (Just (g, floor (mult * massmult)))
 
-createLife :: (RandomGen g) => Galaxy Terrain -> String -> State g (Maybe Civilization)
+createLife :: Galaxy Terrain -> String -> Rnd (Maybe Civilization)
 createLife g cname = do
   let ps = filter sustainsLife (allPlanets g)
   if null ps 

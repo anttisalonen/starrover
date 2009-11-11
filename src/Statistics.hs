@@ -1,3 +1,4 @@
+{-# LANGUAGE Rank2Types #-} 
 module Statistics
 where
 
@@ -5,14 +6,22 @@ import Control.Monad.State
 import System.Random
 import Data.List
 
-randomRM :: (RandomGen g, Random a) => (a, a) -> State g a
+type Rnd a = (RandomGen g) => State g a
+
+randomRM :: (Random a) => (a, a) -> Rnd a
 randomRM v = do
   g <- get
   (x, g') <- return $ randomR v g
   put g'
   return x
 
-stdNormal :: (RandomGen g, Random a, Ord a, Floating a) => State g a
+choose :: [a] -> Rnd a
+choose l = do
+  let n = length l
+  i <- randomRM (0, n - 1)
+  return (l !! i)
+
+stdNormal :: (Random a, Ord a, Floating a) => Rnd a
 stdNormal = do
   u1 <- randomRM (-1, 1)
   u2 <- randomRM (-1, 1)
@@ -29,12 +38,12 @@ stdNormalMarsaglia y1 y2 =
         q = y1 * y1 + y2 * y2
         p = sqrt ((-2) * log q / q)
 
-normal :: (RandomGen g, Random a, Ord a, Floating a) => a -> a -> State g a
+normal :: (Random a, Ord a, Floating a) => a -> a -> Rnd a
 normal mu sigma = do
   n <- stdNormal
   return $ mu + n * sigma
 
-normalR :: (RandomGen g, Random a, Ord a, Floating a) => (a, a) -> a -> a -> State g a
+normalR :: (Random a, Ord a, Floating a) => (a, a) -> a -> a -> Rnd a
 normalR (mn, mx) mu sigma = do
   n <- normal mu sigma
   if n < mn 
@@ -61,4 +70,11 @@ averageInt l = go 0 0 l
 median :: (Ord a, Num a) => [a] -> a
 median [] = error "Median on empty list"
 median l = (sort l) !! (length l `div` 2)
+
+chance :: Int -> Int -> Rnd Bool
+chance a b = do
+  v <- randomRM (1, b)
+  if a <= v
+   then return True
+   else return False
 
