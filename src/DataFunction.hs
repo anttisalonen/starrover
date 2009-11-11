@@ -113,6 +113,17 @@ allStars g = concatMap (M.elems . stars) ((M.elems . starsystems) g)
 allPlanets :: Galaxy a -> [Planet a]
 allPlanets g = concatMap (M.elems . planets) (allStars g)
 
+allBodies :: Galaxy a -> [Planet a]
+allBodies = concatMap bodiesInStarSystem . M.elems . starsystems
+
+bodiesAroundPlanet = M.elems . satellites
+
+bodiesAroundStar :: Star a -> [Planet a]
+bodiesAroundStar s = let pls = (M.elems . planets) s in pls ++ (concatMap bodiesAroundPlanet pls)
+
+bodiesInStarSystem :: StarSystem a -> [Planet a]
+bodiesInStarSystem s = concatMap bodiesAroundStar ((M.elems . stars) s)
+
 {-
 planetTemperatures :: Star a -> StarSystem a -> [Temperature]
 planetTemperatures s ss = map (planetTemperature ss) ((M.elems . planets) s)

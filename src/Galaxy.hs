@@ -52,7 +52,7 @@ data SpectralType = SpectralTypeB
                   | SpectralTypeG
                   | SpectralTypeK
                   | SpectralTypeM
-    deriving (Eq, Read, Show, Enum, Bounded)
+    deriving (Ord, Eq, Read, Show, Enum, Bounded)
 
 data Star a = Star { starname :: String
                    , temperature :: Temperature

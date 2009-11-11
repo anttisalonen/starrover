@@ -62,6 +62,16 @@ zipWith3M f (a:as) (b:bs) (c:cs) = do
   rest <- zipWith3M f as bs cs
   return (n:rest)
 
+zipWith4M :: (Monad m) => (a -> b -> c -> d -> m e) -> [a] -> [b] -> [c] -> [d] -> m [e]
+zipWith4M _ [] _ _ _ = return []
+zipWith4M _ _ [] _ _ = return []
+zipWith4M _ _ _ [] _ = return []
+zipWith4M _ _ _ _ [] = return []
+zipWith4M f (a:as) (b:bs) (c:cs) (d:ds) = do
+  n <- f a b c d
+  rest <- zipWith4M f as bs cs ds
+  return (n:rest)
+
 show2f :: Float -> String
 show2f f = printf "%.2f" f
 

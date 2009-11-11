@@ -46,7 +46,7 @@ starsInGalaxy :: Galaxy a -> [Star a]
 starsInGalaxy = concatMap M.elems . map stars . M.elems . starsystems
 
 moonsInGalaxy :: Galaxy a -> [Planet a]
-moonsInGalaxy = concatMap M.elems . map satellites . bodiesInGalaxy
+moonsInGalaxy = concatMap M.elems . map satellites . allBodies
 
 numMoonsInGalaxy :: Galaxy a -> Int
 numMoonsInGalaxy = length . moonsInGalaxy
@@ -60,21 +60,10 @@ numGStarsInGalaxy = length . numStarsByType SpectralTypeG
 numKStarsInGalaxy = length . numStarsByType SpectralTypeK
 numMStarsInGalaxy = length . numStarsByType SpectralTypeM
 
-bodiesAroundPlanet = M.elems . satellites
-
-bodiesAroundStar :: Star a -> [Planet a]
-bodiesAroundStar s = let pls = (M.elems . planets) s in pls ++ (concatMap bodiesAroundPlanet pls)
-
-bodiesInStarSystem :: StarSystem a -> [Planet a]
-bodiesInStarSystem s = concatMap bodiesAroundStar ((M.elems . stars) s)
-
-bodiesInGalaxy :: Galaxy a -> [Planet a]
-bodiesInGalaxy = concatMap bodiesInStarSystem . M.elems . starsystems
-
-numBodiesByPlanetType a g = length $ (filter (\p -> planettype p == a)) (bodiesInGalaxy g)
+numBodiesByPlanetType a g = length $ (filter (\p -> planettype p == a)) (allBodies g)
 
 numRockyBodiesByAtmosphere :: Atmosphere -> Galaxy a -> Int
-numRockyBodiesByAtmosphere a g = length $ filter (\p -> planettype p == RockyPlanet a) (bodiesInGalaxy g)
+numRockyBodiesByAtmosphere a g = length $ filter (\p -> planettype p == RockyPlanet a) (allBodies g)
 
 isGasGiant p = case planettype p of
                  SmallGasGiant     -> True
@@ -83,13 +72,13 @@ isGasGiant p = case planettype p of
                  VeryLargeGasGiant -> True
                  _                 -> False
 
-numGasGiantsInGalaxy g = length $ (filter isGasGiant) (bodiesInGalaxy g)
+numGasGiantsInGalaxy g = length $ (filter isGasGiant) (allBodies g)
 
 numWaterWeatherSystemBodiesInGalaxy :: Galaxy a -> Int
 numWaterWeatherSystemBodiesInGalaxy = numRockyBodiesByAtmosphere WaterWeatherSystem
 numNoAtmosphereBodiesInGalaxy g = numBodiesByPlanetType NoAtmosphere g + numBodiesByPlanetType Planetoid g
 numHabitableBodiesInGalaxy :: Galaxy a -> Int
-numHabitableBodiesInGalaxy g = length $ filter sustainsLife (allPlanets g)
+numHabitableBodiesInGalaxy g = length $ filter sustainsLife (allBodies g)
 
 showPerc :: Int -> Int -> String
 showPerc a b = printf " (%.2f%%)" (100.0 * (fromIntegral a / fromIntegral b) :: Float)
@@ -97,7 +86,7 @@ showPerc a b = printf " (%.2f%%)" (100.0 * (fromIntegral a / fromIntegral b) :: 
 showstars :: String -> Int -> Int -> String
 showstars c st tot = c ++ show st ++ (showPerc st tot) ++ "\n"
 
-planetMassesInGalaxy g = map planetMass (bodiesInGalaxy g)
+planetMassesInGalaxy g = map planetMass (allBodies g)
 
 minBodyMassInGalaxy = minimum . planetMassesInGalaxy
 

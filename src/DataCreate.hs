@@ -75,8 +75,9 @@ stdMap xs = M.fromList (zip [1..] xs)
 bodyNames :: String -> [String]
 bodyNames = namesFromBasenameNum
 
-starprobs :: [(Flt, SpectralType)]
-starprobs = [(0.001, SpectralTypeB), (0.007, SpectralTypeA), (0.04, SpectralTypeF), (0.11, SpectralTypeG), (0.23, SpectralTypeK), (1, SpectralTypeM)]
+starprobs, starbinaryprobs :: [(Flt, SpectralType)]
+starprobs       = [(0.001, SpectralTypeB), (0.004, SpectralTypeA), (0.02, SpectralTypeF), (0.06, SpectralTypeG), (0.12, SpectralTypeK), (1, SpectralTypeM)]
+starbinaryprobs = [(0.001, SpectralTypeB), (0.010, SpectralTypeA), (0.10, SpectralTypeF), (0.25, SpectralTypeG), (0.40, SpectralTypeK), (1, SpectralTypeM)]
 
 getProbTableValue :: (Ord a) => a -> [(a, b)] -> b
 getProbTableValue n [(_, v)] = v
@@ -89,10 +90,14 @@ createStar :: (Planet () -> Rnd a) -> String -> Flt -> Orbit -> Rnd (Star a)
 createStar genfunc name maxplanetorbitradius orbit = do
   r <- randomRM (0, 1)
   let s = getProbTableValue r starprobs
-  t <- randomStarTemperature s
+  createStar' genfunc name maxplanetorbitradius orbit s
+
+createStar' :: (Planet () -> Rnd a) -> String -> Flt -> Orbit -> SpectralType -> Rnd (Star a)
+createStar' genfunc name maxplanetorbitradius orbit spectraltype = do
+  t <- randomStarTemperature spectraltype
   numplanets <- randomRM (64, 128)
   let planetnames = bodyNames name
-  planetorbitradiuses <- separate `fmap` sort `fmap` replicateM numplanets (randomRM (0.01, min (fromIntegral t * 2 / 100) maxplanetorbitradius))
+  planetorbitradiuses <- separate `fmap` sort `fmap` replicateM numplanets (randomRM (0.0001, min (fromIntegral t * 2 / 120) maxplanetorbitradius))
   planets <- zipWithM (createPlanet genfunc t) planetnames planetorbitradiuses
   return $! Star name t orbit (stdMap (filter (\p -> planetTemperature' t p > 30 && planetTemperature' t p < t `div` 4) planets))
 
@@ -120,7 +125,8 @@ createStars genfunc basename numstars = do
   orbitradiuses <- sort `fmap` replicateM numstars (randomRM (0.1, 12000))
   orbits <- mapM createOrbit orbitradiuses
   let dists = map (/4) (distances orbitradiuses)
-  stars <- zipWith3M (createStar genfunc) names dists orbits
+  spectraltypes <- map (flip getProbTableValue starbinaryprobs) `fmap` replicateM numstars (randomRM (0, 1))
+  stars <- zipWith4M (createStar' genfunc) names dists orbits (sort spectraltypes)
   return $! stars
 
 createStarSystem :: (Planet () -> Rnd a) -> String -> Vector3 -> Rnd (StarSystem a)
@@ -227,7 +233,7 @@ createNaturalGood massmult pt g =
 
 createLife :: Galaxy Terrain -> String -> Rnd (Maybe Civilization)
 createLife g cname = do
-  let ps = filter sustainsLife (allPlanets g)
+  let ps = filter sustainsLife (allBodies g)
   if null ps 
     then return Nothing
     else do
