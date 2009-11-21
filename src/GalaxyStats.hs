@@ -7,7 +7,7 @@ import Text.Printf
 import Galaxy
 import DataFunction
 import Statistics
-import Named
+import Libaddutil.Named
 import Utils
 
 numStarSystemsInGalaxy :: Galaxy a -> Int

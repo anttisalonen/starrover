@@ -8,7 +8,7 @@ import Data.Tree
 import Galaxy
 import Math
 import ZipperGalaxy
-import Named
+import Libaddutil.Named
 
 data Good = Good { goodname :: String
                  , natural :: Maybe Natural

@@ -9,7 +9,7 @@ import qualified Data.Map as M
 import ZipperGalaxy
 import Galaxy
 import DataFunction
-import Named
+import Libaddutil.Named
 import Utils
 
 findZipperGalaxyToPlanet :: (Eq a) => Planet a -> Galaxy a -> Maybe (GalaxyZipper a)

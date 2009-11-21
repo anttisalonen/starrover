@@ -15,7 +15,8 @@ Build-type:     Simple
 Executable starrover
   Build-Depends:   base, haskell98, array>=0.2.0.0,
                    directory>=1.0.0.0, containers>=0.2.0.0,
-                   random>=1.0.0.0, mtl>=1.1.0.0
+                   random>=1.0.0.0, mtl>=1.1.0.0,
+                   libaddutil>=0.0.2
   Main-is:         Main.hs
   Hs-Source-Dirs:  src
 

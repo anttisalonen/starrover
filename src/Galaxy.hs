@@ -4,7 +4,7 @@ where
 import qualified Data.Map as M
 
 import Math
-import Named
+import Libaddutil.Named
 
 type Temperature = Int
 
