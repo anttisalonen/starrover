@@ -58,7 +58,11 @@ getXInfoFromY y getfunc printfunc =
   in concatMap (++ "\n") titles
 
 sstitle :: StarSystem a -> String
-sstitle ss = printf "%s - %d stars - Main: %s - %s" (name ss) (M.size (stars ss)) ((show . spectralType . snd . M.findMin) (stars ss)) ((show . ssposition) ss)
+sstitle ss = printf "%s - %d stars - Main: %s - %s" 
+    (name ss) 
+    (M.size (stars ss)) 
+    ((show . spectralType . snd . M.findMin) (stars ss)) 
+    ((show . ssposition) ss)
 
 genTitle :: (a -> String) -> Int -> a -> String
 genTitle f num x = printf "%4d. %s" num (f x)
