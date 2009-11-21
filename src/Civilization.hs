@@ -53,8 +53,23 @@ data Building = Building { buildingname :: String
 instance Show Building where
   show = name
 
+data Empire = Empire { empirename :: String
+                     , civilizations :: [Civilization]
+                     }
+
+data Federation = Federation { fedname :: String
+                             , states :: [State]
+                             }
+
+data State = State { statename :: String
+                   , colonies :: [Colony]
+                   }
+
+data Colony = Colony { colonyname :: String 
+ } --                    , planet :: Planet Terrain }
+
 data Civilization = Civilization { civname :: String
-                                 , settlements :: [Settlement]
+                                 , federations :: [Federation]
                                  }
 
 instance Show Civilization where
@@ -88,11 +103,11 @@ stdBuildingsMap = namedsToMap stdBuildings
 namedsToMap :: (Named a) => [a] -> M.Map String a
 namedsToMap ns = M.fromList (zip (map name ns) ns)
 
---             Name            Natural             temp      atm        growth  initial needed goods   work building food bonus    lux med  weap
+--             Name            Natural            atm        growth  initial needed goods   work building food bonus    lux med  weap
 wood    = Good "Wood"         (Just $ Natural [WaterWeatherSystem] 1.0 1.0)  []             1.0 Nothing     0    []     0   0    0.01
 animals = Good "Live animals" (Just $ Natural [WaterWeatherSystem] 0.5 0.5)  []             1.0 Nothing     1.0  []     0   0.01 0
 water   = Good "Water"        (Just $ Natural [WaterWeatherSystem] 1.0 1.0)  []             0.1 Nothing     0    []     0   0.02 0
-grain   = Good "Grain"        Nothing                                                   [water]        1.0 (Just farm) 1.0  []     0   0.01 0
+grain   = Good "Grain"        Nothing                                        [water]        1.0 (Just farm) 1.0  []     0   0.01 0
 iron    = Good "Iron"         (Just $ Natural []                   0.0 0.1)  []             2.0 (Just mine) 0    []     0   0    0.02
 coal    = Good "Coal"         (Just $ Natural []                   0.0 0.05) []             2.0 (Just mine) 0    []     0   0    0
 uranium = Good "Uranium"      (Just $ Natural []                   0.0 0.01) []             3.0 (Just mine) 0    []     0   0    0

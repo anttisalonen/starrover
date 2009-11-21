@@ -80,13 +80,16 @@ planetAroundStar p s = p `elem` (M.elems (planets s))
 starInSystemByPlanet :: (Eq a) => Planet a -> StarSystem a -> Maybe (Star a)
 starInSystemByPlanet p ss = listToMaybe (filter (planetAroundStar p) ((M.elems . stars) ss))
 
+waterMinTemperature = 250
+waterMaxTemperature = 320
+
 sustainsLife :: Planet a -> Bool
 sustainsLife p = 
   planettype p == RockyPlanet WaterWeatherSystem && 
   planetMass p > 0.01  && 
   planetMass p < 20.0  && 
-  planetTemperature p < 320 && 
-  planetTemperature p > 250
+  planetTemperature p < waterMaxTemperature && 
+  planetTemperature p > waterMinTemperature
 
 planetMass :: Planet a -> Flt
 planetMass = bodymass . physics

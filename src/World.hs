@@ -3,10 +3,14 @@ module World
 where
 
 import Galaxy
+import Civilization
+import Statistics
+import System.Random
+import Control.Monad.State
 
-data World = World { galaxy  :: Galaxy
+data World = World { galaxy  :: Galaxy Terrain
                    , time    :: GalaxyTime
-                   , civilizations :: [Civilization]
+                   , empires :: [Empire]
                    , player  :: Player
                    }
 
@@ -16,25 +20,26 @@ data GalaxyTime = GalaxyTime { year   :: Int
                              , minute :: Int
                              }
 
-data Nation = Nation { nationname :: String
-                     , federation :: Federation
-                     , relations :: [(Nation, Relation)]
-                     }
+data Relation a = Relation { relationship :: Int
+                           , contracts :: [Contract a] }
 
-data Federation = Federation { states :: [State] }
-
-data Relation = Relation { relationship :: Int
-                         , contracts :: [Contract] }
-
-data Contract = Embargo Nation
-
-data State = State { colonies :: [Colony] }
-
-data Colony = Colony { planet :: Planet }
+data Contract a = Embargo a
 
 class TreeContainer a b k c where
   content :: a b k c -> b
   child :: (TreeContainer x y z w) => a b k c -> k -> x y z w
 
-
 data Player = Player {playername :: String }
+
+testRandomWorld :: Galaxy Terrain -> Int -> Int -> Maybe World
+testRandomWorld g v numciv =
+  let r = mkStdGen v
+  in Just $ evalState (createWorld g numciv) r
+
+nullGalaxyTime = GalaxyTime 0 0 0 0
+
+nullPlayer = Player ""
+
+createWorld :: Galaxy Terrain -> Int -> Rnd World
+createWorld g numciv = do
+  return $ World g nullGalaxyTime [] nullPlayer

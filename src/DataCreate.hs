@@ -31,17 +31,17 @@ createPlanetType mass startemp orbitradius = do
 createRockyPlanetAtmosphere :: Flt -> Temperature -> Flt -> Rnd PlanetType
 createRockyPlanetAtmosphere mass startemp orbitradius = do
   weather <- randomRM (1, 100 :: Int)
-  let atm1 = if weather < 5
+  let atm1 = if weather < 10
                then RockyPlanet WaterWeatherSystem 
-               else if weather < 10 then RockyPlanet MethaneWeatherSystem
-               else if weather < 20 then RockyPlanet SulphurDioxide
-               else if weather < 60 then RockyPlanet CarbonDioxide
+               else if weather < 30 then RockyPlanet MethaneWeatherSystem
+               else if weather < 50 then RockyPlanet SulphurDioxide
+               else if weather < 90 then RockyPlanet CarbonDioxide
                else RockyPlanet Nitrogen
-  return $!
-    case atm1 of
-      RockyPlanet WaterWeatherSystem   -> if (planetTemperature'' startemp orbitradius atm1) > 330 then RockyPlanet Nitrogen else atm1
-      RockyPlanet MethaneWeatherSystem -> if (planetTemperature'' startemp orbitradius atm1) > 600 then RockyPlanet Nitrogen else atm1
-      _                                -> atm1
+  let ptemp = planetTemperature'' startemp orbitradius atm1
+  return $! case atm1 of
+    RockyPlanet WaterWeatherSystem   -> if ptemp < waterMaxTemperature && ptemp > waterMinTemperature then atm1 else RockyPlanet Nitrogen
+    RockyPlanet MethaneWeatherSystem -> if ptemp < 120 && ptemp > 70  then atm1 else RockyPlanet Nitrogen
+    _                                -> atm1
 
 createSatellite :: Flt -> Flt -> (Planet () -> Rnd a) -> Temperature -> String -> Flt -> Rnd (Planet a)
 createSatellite minmass maxmass genfunc startemp name orbitradius = do
@@ -241,10 +241,18 @@ createLife g cname = do
       let mzip = findZipperGalaxyToPlanet p g
       case mzip of
         Nothing -> return Nothing
-        Just s  -> return $! Just $ Civilization cname ([Settlement s])
+        Just s  -> return $! Just $ Civilization cname []
 
-testCiv :: Maybe Civilization
-testCiv = 
+civnames :: [String]
+civnames = ["humans",
+            "aliens",
+            "ant insect animals",
+            "slimy aliens",
+            "cosmic hive snakes"
+           ]
+
+testCiv :: String -> Maybe Civilization
+testCiv civname = 
   let r = mkStdGen 20
-  in evalState (createLife (testRandomGalaxy 21 256) "humans") r
+  in evalState (createLife (testRandomGalaxy 21 256) civname) r
 

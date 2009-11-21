@@ -6,18 +6,71 @@ import Data.Maybe
 import DataCreate
 import GalaxyStats
 import ZipperGalaxy
+import Galaxy
+import World
+import Civilization
 import ZipperGalaxyUtils
 
 main :: IO ()
 main = do
   let g = testRandomGalaxy 22 24
+  let w = testRandomWorld g 22 1
   putStrLn (galaxyStats g)
-  browseGalaxy (g, Nothing)
+  case w of
+    Nothing -> putStrLn "Unable to create world?"
+    Just jw -> do
+      mainMenu jw
 
-type Input a = Maybe (GalaxyZipper a)
+mainMenu :: World -> IO ()
+mainMenu w = do
+  let g = galaxy w
+  i <- getMainMenuInput
+  case i of
+    Quit   -> return ()
+    Life   -> browseLife w >>= mainMenu
+    Zipper -> browseGalaxy (g, Nothing) >> mainMenu w
 
-getInput :: (Show a) => GalaxyZipper a -> IO (Input a)
-getInput z = do
+data MainMenuInput = Zipper | Life | Quit
+
+browseLife :: World -> IO World
+browseLife w = do
+  i <- getLifeInput w
+  case i of
+    Nothing -> return w
+    Just v  -> browseLife (timePass v w)
+
+lifeInfo :: World -> String
+lifeInfo w = ""
+
+getLifeInput :: World -> IO (Maybe Int)
+getLifeInput w = do
+  putStrLn (lifeInfo w)
+  c <- getLine
+  case reads c of
+    [(num, _)] -> return (Just num)
+    _          -> return Nothing
+
+timePass :: Int -> World -> World
+timePass _ w = w
+
+getMainMenuInput :: IO MainMenuInput
+getMainMenuInput = do
+  putStrLn "What would you like to do?"
+  putStrLn "l. Life"
+  putStrLn "g. Browse galaxy"
+  putStrLn "_. Quit"
+  s <- getLine
+  case s of
+    [] -> getMainMenuInput
+    (c:cs) -> return $ case c of
+                         'l' -> Life
+                         'g' -> Zipper
+                         _   -> Quit
+
+type ZipperInput a = Maybe (GalaxyZipper a)
+
+getZipperInput :: (Show a) => GalaxyZipper a -> IO (ZipperInput a)
+getZipperInput z = do
   putStrLn (genInfo z)
   c <- getLine
   case reads c of
@@ -25,16 +78,17 @@ getInput z = do
                     then return $ Just (up z) 
                     else case tryDown num z of
                            Just nz -> return $ Just nz
-                           Nothing -> getInput z
+                           Nothing -> getZipperInput z
     _          -> if not (null c)
                     then case head c of
                            'q' -> return Nothing
-                           's' -> putStrLn (galaxyStats (galaxyInZipper z)) >> getInput z
-                           _   -> getInput z
-                    else getInput z
+                           's' -> putStrLn (galaxyStats (galaxyInZipper z)) >> getZipperInput z
+                           _   -> getZipperInput z
+                    else getZipperInput z
 
+browseGalaxy :: (Show a) => GalaxyZipper a -> IO ()
 browseGalaxy z = do
-  i <- getInput z
+  i <- getZipperInput z
   case i of
     Nothing -> return ()
     Just nz -> browseGalaxy nz
