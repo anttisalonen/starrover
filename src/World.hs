@@ -7,10 +7,11 @@ import Civilization
 import Statistics
 import System.Random
 import Control.Monad.State
+import qualified Data.Map as M
 
 data World = World { galaxy  :: Galaxy Terrain
                    , time    :: GalaxyTime
-                   , empires :: [Empire]
+                   , empires :: M.Map Int Empire
                    , player  :: Player
                    }
 
@@ -42,4 +43,4 @@ nullPlayer = Player ""
 
 createWorld :: Galaxy Terrain -> Int -> Rnd World
 createWorld g numciv = do
-  return $ World g nullGalaxyTime [] nullPlayer
+  return $ World g nullGalaxyTime M.empty nullPlayer
