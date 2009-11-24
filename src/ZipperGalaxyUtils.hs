@@ -13,7 +13,7 @@ import Libaddutil.Named
 import Utils
 
 findZipperGalaxyToPlanet :: (Eq a) => Planet a -> Galaxy a -> Maybe (GalaxyZipper a)
-findZipperGalaxyToPlanet p g = firstMaybe (findZipperStarSystemToPlanet p g) (M.elems (starsystems g))
+findZipperGalaxyToPlanet p g = firstMaybe (findZipperStarSystemToPlanet p g) (M.elems (Galaxy.starsystems g))
 
 findZipperStarSystemToPlanet :: (Eq a) => Planet a -> Galaxy a -> StarSystem a -> Maybe (GalaxyZipper a)
 findZipperStarSystemToPlanet p g ss = firstMaybe (findZipperStarToPlanet p g ss) (M.elems (stars ss))
@@ -33,7 +33,7 @@ findZipperPlanetToPlanet p g ss s p' =
 
 genInfo :: (Show a) => GalaxyZipper a -> String
 genInfo z = galaxyInfo z ++ 
-  (smallInfo z starSystemInZipper starSystemInfo) ++
+  (smallInfo z starsystemInZipper starSystemInfo) ++
   (smallInfo z starInZipper starInfo) ++
   (smallInfo z satelliteInZipper satelliteInfo)
 
@@ -41,9 +41,9 @@ galaxyInfo :: (Show a) => GalaxyZipper a -> String
 galaxyInfo z = gname ++ "\n" ++ sysinfo
   where g       = galaxyInZipper z
         gname   = "Galaxy name: " ++ name g
-        sysinfo = case starSystemInZipper z of
+        sysinfo = case starsystemInZipper z of
                     Just _  -> ""
-                    Nothing -> getXInfoFromY g starsystems (genTitle sstitle)
+                    Nothing -> getXInfoFromY g Galaxy.starsystems (genTitle sstitle)
 
 starSystemInfo ss z = sysinfo ++ "\n" ++ starinfo
     where sysinfo = "Star system name: " ++ name ss
@@ -102,4 +102,22 @@ infoSatellite p =
   "Number of satellites: " ++ (show . M.size . satellites) p ++ " - " ++
   "Type: " ++ (show . planettype) p
 
+starsystems :: Galaxy a -> [GalaxyZipper a]
+starsystems g = map (starsystemZipper g) (M.elems (Galaxy.starsystems g))
+
+expandStarsystems :: [GalaxyZipper a] -> [GalaxyZipper a]
+expandStarsystems = concatMap expandStarsystemZipper
+
+expandStars :: [GalaxyZipper a] -> [GalaxyZipper a]
+expandStars = concatMap expandStarZipper
+
+expandPlanet :: [GalaxyZipper a] -> [GalaxyZipper a]
+expandPlanet = concatMap expandPlanetZipper
+
+allBodies :: Galaxy a -> [GalaxyZipper a]
+allBodies = expandPlanet . expandStars . expandStarsystems . ZipperGalaxyUtils.starsystems
+
+sustainsLifeZ :: GalaxyZipper a -> Bool
+sustainsLifeZ (g, Just (ss, Just (s, (p:_)))) = sustainsLife p
+sustainsLifeZ _                               = False
 

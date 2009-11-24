@@ -78,3 +78,10 @@ chance a b = do
    then return True
    else return False
 
+-- shuffle :: [a] -> Rnd [a]
+shuffle l = shuffle' l [] -- >>= reverse >>= flip shuffle' []
+  where shuffle' [] bs = return bs
+        shuffle' as bs = do
+          el <- choose as
+          shuffle' (delete el as) (el : bs)
+

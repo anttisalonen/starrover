@@ -3,6 +3,7 @@ where
 
 import Data.Maybe
 import Text.Printf
+import qualified Data.Map as M
 
 import Math
 import Statistics
@@ -80,4 +81,7 @@ show3f f = printf "%.3f" f
 
 mapMaybeM :: (Monad m) => (a -> m (Maybe b)) -> [a] -> m [b]
 mapMaybeM f l = mapM f l >>= return . catMaybes
+
+stdMap :: [a] -> M.Map Int a
+stdMap xs = M.fromList (zip [1..] xs)
 

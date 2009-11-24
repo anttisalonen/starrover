@@ -69,9 +69,6 @@ createPlanet genfunc startemp name orbitradius = do
   cont <- genfunc (Planet name orbit (BodyPhysics mass) atmosphere temp M.empty ())
   return $! Planet name orbit (BodyPhysics mass) atmosphere temp (stdMap satellites) cont
 
-stdMap :: [a] -> M.Map Int a
-stdMap xs = M.fromList (zip [1..] xs)
-
 bodyNames :: String -> [String]
 bodyNames = namesFromBasenameNum
 
@@ -231,18 +228,6 @@ createNaturalGood massmult pt g =
           mult <- randomRM (0, initial)
           return (Just (g, floor (mult * massmult)))
 
-createLife :: Galaxy Terrain -> String -> Rnd (Maybe Civilization)
-createLife g cname = do
-  let ps = filter sustainsLife (allBodies g)
-  if null ps 
-    then return Nothing
-    else do
-      p <- choose ps
-      let mzip = findZipperGalaxyToPlanet p g
-      case mzip of
-        Nothing -> return Nothing
-        Just s  -> return $! Just $ Civilization cname []
-
 civnames :: [String]
 civnames = ["humans",
             "aliens",
@@ -250,9 +235,4 @@ civnames = ["humans",
             "slimy aliens",
             "cosmic hive snakes"
            ]
-
-testCiv :: String -> Maybe Civilization
-testCiv civname = 
-  let r = mkStdGen 20
-  in evalState (createLife (testRandomGalaxy 21 256) civname) r
 

@@ -3,8 +3,12 @@ module World
 where
 
 import Galaxy
+import ZipperGalaxy
+import ZipperGalaxyUtils
+import DataFunction
 import Civilization
 import Statistics
+import Utils
 import System.Random
 import Control.Monad.State
 import qualified Data.Map as M
@@ -35,12 +39,27 @@ data Player = Player {playername :: String }
 testRandomWorld :: Galaxy Terrain -> Int -> Int -> Maybe World
 testRandomWorld g v numciv =
   let r = mkStdGen v
-  in Just $ evalState (createWorld g numciv) r
+  in evalState (createWorld g numciv) r
 
 nullGalaxyTime = GalaxyTime 0 0 0 0
 
 nullPlayer = Player ""
 
-createWorld :: Galaxy Terrain -> Int -> Rnd World
+habitablePlanetsZ :: Galaxy Terrain -> [GalaxyZipper Terrain]
+habitablePlanetsZ g = filter sustainsLifeZ (ZipperGalaxyUtils.allBodies g)
+
+createWorld :: Galaxy Terrain -> Int -> Rnd (Maybe World)
 createWorld g numciv = do
-  return $ World g nullGalaxyTime M.empty nullPlayer
+  let ps = habitablePlanetsZ g
+  if null ps 
+    then return Nothing
+    else do
+      ps' <- shuffle ps
+      let cs = take numciv ps'
+      if length cs < numciv 
+        then return Nothing
+        else do
+          let ns = [1..]
+          let enames = (map show [1..])
+          let empires = map (flip Empire []) enames
+          return $ Just $ World g nullGalaxyTime (M.fromList (zip ns empires)) nullPlayer

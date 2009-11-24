@@ -5,6 +5,7 @@ import Data.Maybe
 
 import DataCreate
 import GalaxyStats
+import DataFunction
 import ZipperGalaxy
 import Galaxy
 import World
@@ -16,6 +17,7 @@ main = do
   let g = testRandomGalaxy 22 24
   let w = testRandomWorld g 22 1
   putStrLn (galaxyStats g)
+  print testPlanetCreatingZipper
   case w of
     Nothing -> putStrLn "Unable to create world?"
     Just jw -> do
@@ -92,4 +94,11 @@ browseGalaxy z = do
   case i of
     Nothing -> return ()
     Just nz -> browseGalaxy nz
+
+testPlanetCreatingZipper :: Bool
+testPlanetCreatingZipper =
+  let g = testRandomGalaxy 22 24
+      n1 = map planetname $ map fromJust $ map ZipperGalaxy.satelliteInZipper (habitablePlanetsZ g)
+      n2 = map planetname (filter sustainsLife (DataFunction.allBodies g))
+  in n1 == n2
 

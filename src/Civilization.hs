@@ -54,31 +54,12 @@ instance Show Building where
   show = name
 
 data Empire = Empire { empirename :: String
-                     , civilizations :: [Civilization]
+                     , colonies :: [Colony]
                      }
 
-data Federation = Federation { fedname :: String
-                             , states :: [State]
-                             }
-
-data State = State { statename :: String
-                   , colonies :: [Colony]
-                   }
-
-data Colony = Colony { colonyname :: String 
- } --                    , planet :: Planet Terrain }
-
-data Civilization = Civilization { civname :: String
-                                 , federations :: [Federation]
-                                 }
-
-instance Show Civilization where
-  show = name
-
-data Settlement = Settlement { settlementzipper :: GalaxyZipper Terrain }
-
-instance Show Settlement where
-  show = name . fromJust . satelliteInZipper . settlementzipper
+data Colony = Colony { colonyname :: String
+                     , location   :: GalaxyLocation
+                     }
 
 data Ruleset = Ruleset { goods     :: M.Map String Good
                        , buildings :: M.Map String Building
@@ -90,9 +71,6 @@ instance Named Good where
 
 instance Named Building where
   name = buildingname
-
-instance Named Civilization where
-  name = civname
 
 stdRules = Ruleset stdGoodsMap stdBuildingsMap
 
