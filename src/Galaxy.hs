@@ -1,10 +1,11 @@
 module Galaxy
 where
 
-import qualified Data.Map as M
+import qualified Data.Edison.Assoc.StandardMap as E
 
 import Math
 import Libaddutil.Named
+import Utils
 
 type Temperature = Int
 
@@ -41,7 +42,7 @@ data Planet a = Planet { planetname :: String
                        , physics :: BodyPhysics
                        , planettype :: PlanetType
                        , planettemperature :: Temperature
-                       , satellites :: M.Map Int (Planet a)
+                       , satellites :: E.FM Name (Planet a)
                        , info :: a
                        }
     deriving (Eq, Read, Show)
@@ -57,18 +58,18 @@ data SpectralType = SpectralTypeB
 data Star a = Star { starname :: String
                    , temperature :: Temperature
                    , starorbit :: Orbit
-                   , planets :: M.Map Int (Planet a)
+                   , planets :: E.FM Name (Planet a)
                    }
     deriving (Eq, Read, Show)
 
 data StarSystem a = StarSystem { starsystemname :: String
                                , ssposition :: Vector3 
-                               , stars :: M.Map Int (Star a)
+                               , stars :: E.FM Name (Star a)
                                }
     deriving (Eq, Read, Show)
 
 data Galaxy a = Galaxy { galaxyname :: String
-                       , starsystems :: M.Map Int (StarSystem a)
+                       , starsystems :: E.FM Name (StarSystem a)
                        }
     deriving (Eq, Read, Show)
 

@@ -7,6 +7,9 @@ import qualified Data.Map as M
 
 import Math
 import Statistics
+import Libaddutil.Named
+
+type Name = String
 
 firstMaybe :: (a -> Maybe b) -> [a] -> Maybe b
 firstMaybe f l = listToMaybe $ mapMaybe f l
@@ -82,6 +85,6 @@ show3f f = printf "%.3f" f
 mapMaybeM :: (Monad m) => (a -> m (Maybe b)) -> [a] -> m [b]
 mapMaybeM f l = mapM f l >>= return . catMaybes
 
-stdMap :: [a] -> M.Map Int a
-stdMap xs = M.fromList (zip [1..] xs)
+stdMap :: (Named a) => [a] -> M.Map Name a
+stdMap xs = M.fromList (zip (map name xs) xs)
 

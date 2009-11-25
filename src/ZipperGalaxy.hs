@@ -3,6 +3,9 @@ where
 
 import Control.Monad
 import qualified Data.Map as M
+import Data.Maybe
+
+import Libaddutil.Named
 
 import Galaxy
 import Utils
@@ -55,7 +58,7 @@ satelliteThreadInZipper (_, Just (ss, Just (s, sats))) = sats
 satelliteInZipper :: GalaxyZipper a -> Maybe (Planet a)
 satelliteInZipper z = safeHead (satelliteThreadInZipper z)
 
-tryDown :: Int -> GalaxyZipper a -> Maybe (GalaxyZipper a)
+tryDown :: Name -> GalaxyZipper a -> Maybe (GalaxyZipper a)
 tryDown i (g, Nothing) = 
   let mss = M.lookup i (starsystems g)
   in case mss of
@@ -83,11 +86,24 @@ up (g, Just (ss, Nothing)) = (g, Nothing)
 up (g, Just (ss, Just (s, []))) = (g, Just (ss, Nothing))
 up (g, Just (ss, Just (s, (sat:sats)))) = (g, Just (ss, Just (s, sats)))
 
-type GalaxyLocation = [Int]
+type GalaxyLocation = [Name]
 
 findLocation :: GalaxyLocation -> Galaxy a -> Maybe (Planet a)
 findLocation l g = do
    let z = galaxyZipper g
    nz <- foldM (flip tryDown) z l
    satelliteInZipper nz
+
+zipperToNames :: GalaxyZipper a -> [String]
+zipperToNames z =
+  let g  = galaxyInZipper z
+      ss = starsystemInZipper z
+      s  = starInZipper z
+      ps = satelliteThreadInZipper z
+      ns = [name g, getName ss, getName s] ++ map name ps
+      getName :: (Named a) => Maybe a -> String
+      getName m = case m of
+                    Nothing -> ""
+                    Just x  -> name x
+  in filter (not . null) ns
 

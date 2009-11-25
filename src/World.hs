@@ -61,5 +61,7 @@ createWorld g numciv = do
         else do
           let ns = [1..]
           let enames = (map show [1..])
-          let empires = map (flip Empire []) enames
+          let collocs = map zipperToNames ps
+          let cols = map (Colony "colony") collocs
+          let empires = zipWith Empire enames [cols]
           return $ Just $ World g nullGalaxyTime (M.fromList (zip ns empires)) nullPlayer

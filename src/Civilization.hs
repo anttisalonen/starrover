@@ -58,7 +58,7 @@ data Empire = Empire { empirename :: String
                      }
 
 data Colony = Colony { colonyname :: String
-                     , location   :: GalaxyLocation
+                     , location   :: [String]
                      }
 
 data Ruleset = Ruleset { goods     :: M.Map String Good
