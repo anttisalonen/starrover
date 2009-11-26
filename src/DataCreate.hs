@@ -208,10 +208,10 @@ createTerrain gs p =
 createRockyTerrain :: [Good] -> Planet () -> Rnd Terrain
 createRockyTerrain gs p = do
   massmult <- randomRM (0, 1000 * planetMass p)
-  gs <- mapMaybeM (createNaturalGood massmult (planettype p)) gs
-  return (Terrain gs)
+  gs' <- mapMaybeM (createNaturalGood massmult (planettype p)) gs
+  return (Terrain gs')
 
-createNaturalGood :: Flt -> PlanetType -> Good -> Rnd (Maybe (Good, Int))
+createNaturalGood :: Flt -> PlanetType -> Good -> Rnd (Maybe Resource)
 createNaturalGood massmult pt g = 
   case natural g of
     Nothing                       -> return Nothing

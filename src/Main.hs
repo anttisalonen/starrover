@@ -55,7 +55,7 @@ getLifeInput w = do
 timePass :: Int -> World -> World
 timePass i w | i <= 0    = w
              | otherwise =
-  let newgal = regenerateGalaxy 0.5 (galaxy w)
+  let newgal = regenerateGalaxy 0.05 (galaxy w)
   in timePass (i - 1) (w{galaxy = newgal})
 
 getMainMenuInput :: IO MainMenuInput

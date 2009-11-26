@@ -12,6 +12,8 @@ import Libaddutil.Named
 import Utils
 import qualified Data.Edison.Assoc.StandardMap as E
 
+type ResourceUnit = Integer
+
 data Good = Good { goodname :: String
                  , natural :: Maybe Natural
                  , neededGoods :: [Good]
@@ -39,13 +41,13 @@ data Natural = Natural { neededAtmosphere :: [Atmosphere] -- OR'ed
 data Terrain = Terrain { terraingoods :: [Resource] }
     deriving (Eq)
 
-type Resource = (Good, Int)
+type Resource = (Good, ResourceUnit)
 
 instance Show Terrain where
   show t = "    " ++ concatMap ((++ " ") . show) (terraingoods t)
 
 data Building = Building { buildingname :: String
-                         , goodsToBuild :: [(Good, Int)]
+                         , goodsToBuild :: [(Good, ResourceUnit)]
                          , buildWork    :: Flt
                          , prerequisiteBuildings :: [Building]
                          , market :: Flt -- [0..1]
@@ -94,6 +96,7 @@ uranium = Good "Uranium"      (Just $ Natural []                   0.0 0.01) [] 
 oil     = Good "Oil"          (Just $ Natural []                   0.0 0.01) []             3.0 (Just mine) 0    []     0   0    0
 gems    = Good "Gems"         (Just $ Natural []                   0.0 0.01) []             3.0 (Just mine) 0    []     0   0    0
 
+stdGoods :: [Good]
 stdGoods = [wood, animals, water, grain, iron, coal, uranium, oil, gems]
 
 --                 Name       goods       work prereq market bonus
@@ -114,7 +117,7 @@ regenerateGood coeff r@(g, v) =
                  then r
                  else if growthRate n == 0
                         then r
-                        else (g, v * (floor (1 + coeff * growthRate n)))
+                        else (g, floor (fromIntegral v * (1 + coeff * growthRate n)))
 
 updateTerrain :: (a -> a) -> Planet a -> Planet a
 updateTerrain f p = let oldinfo = info p
