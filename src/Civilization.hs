@@ -9,6 +9,8 @@ import Galaxy
 import Math
 import ZipperGalaxy
 import Libaddutil.Named
+import Utils
+import qualified Data.Edison.Assoc.StandardMap as E
 
 data Good = Good { goodname :: String
                  , natural :: Maybe Natural
@@ -99,4 +101,55 @@ farm    = Building "Farm"     [(wood, 20)] 15  []     0      []
 mine    = Building "Mine"     [(wood, 30)] 30  []     0      []
 
 stdBuildings = [farm, mine]
+
+regenerate :: Flt -> Terrain -> Terrain
+regenerate coeff t = let nr = map (regenerateGood coeff) (terraingoods t)
+                     in t{terraingoods = nr}
+
+regenerateGood :: Flt -> Resource -> Resource
+regenerateGood coeff r@(g, v) = 
+  case natural g of
+    Nothing -> r
+    Just n  -> if v == 0 
+                 then r
+                 else if growthRate n == 0
+                        then r
+                        else (g, v * (floor (1 + coeff * growthRate n)))
+
+updateTerrain :: (a -> a) -> Planet a -> Planet a
+updateTerrain f p = let oldinfo = info p
+                        newinfo = f oldinfo
+                    in p{info = newinfo}
+
+updateSatellite :: Name -> (Planet a -> Planet a) -> Planet a -> Planet a
+updateSatellite n f p = p{satellites = E.adjust f n (satellites p)}
+
+updatePlanet :: Name -> (Planet a -> Planet a) -> Star a -> Star a
+updatePlanet n f s = s{planets = E.adjust f n (planets s)}
+
+updateStar :: Name -> (Star a -> Star a) -> StarSystem a -> StarSystem a
+updateStar n f s = s{stars = E.adjust f n (stars s)}
+
+updateStarsystem :: Name -> (StarSystem a -> StarSystem a) -> Galaxy a -> Galaxy a
+updateStarsystem n f g = g{starsystems = E.adjust f n (starsystems g)}
+
+updateStarsystems :: (StarSystem a -> StarSystem a) -> Galaxy a -> Galaxy a
+updateStarsystems f g = g{starsystems = E.map f (starsystems g)}
+
+updateStars :: (Star a -> Star a) -> StarSystem a -> StarSystem a
+updateStars f s = s{stars = E.map f (stars s)}
+
+updatePlanets :: (Planet a -> Planet a) -> Star a -> Star a
+updatePlanets f s = s{planets = E.map f (planets s)}
+
+updateSatellites :: (Planet a -> Planet a) -> Planet a -> Planet a
+updateSatellites f p = p{satellites = E.map f (satellites p)}
+
+updateBodies :: (Planet a -> Planet a) -> Star a -> Star a
+updateBodies f s = let s' = updatePlanets f s
+                       ps = E.map (updateSatellites f) (planets s')
+                   in s'{planets = ps}
+
+regenerateGalaxy :: Flt -> Galaxy Terrain -> Galaxy Terrain
+regenerateGalaxy coeff = updateStarsystems $ updateStars $ updateBodies $ updateTerrain $ regenerate coeff
 
