@@ -38,7 +38,7 @@ data Natural = Natural { neededAtmosphere :: [Atmosphere] -- OR'ed
                        }
     deriving (Eq, Read, Show)
 
-data Terrain = Terrain { terraingoods :: [Resource] }
+data Terrain = Terrain { terraingoods :: [(Resource, ResourceUnit)] }
     deriving (Eq)
 
 type Resource = (Good, ResourceUnit)
@@ -106,18 +106,21 @@ mine    = Building "Mine"     [(wood, 30)] 30  []     0      []
 stdBuildings = [farm, mine]
 
 regenerate :: Flt -> Terrain -> Terrain
-regenerate coeff t = let nr = map (regenerateGood coeff) (terraingoods t)
+regenerate coeff t = let nr = map (regenRes coeff) (terraingoods t)
                      in t{terraingoods = nr}
 
-regenerateGood :: Flt -> Resource -> Resource
-regenerateGood coeff r@(g, v) = 
+regenRes :: Flt -> (Resource, ResourceUnit) -> (Resource, ResourceUnit)
+regenRes coeff r@(_, m) = (regenerateGood coeff r, m)
+
+regenerateGood :: Flt -> (Resource, ResourceUnit) -> Resource
+regenerateGood coeff (r@(g, v), m) = 
   case natural g of
     Nothing -> r
     Just n  -> if v == 0 
                  then r
                  else if growthRate n == 0
                         then r
-                        else (g, floor (fromIntegral v * (1 + coeff * growthRate n)))
+                        else (g, min m (floor (fromIntegral v * (1 + coeff * growthRate n))))
 
 updateTerrain :: (a -> a) -> Planet a -> Planet a
 updateTerrain f p = let oldinfo = info p

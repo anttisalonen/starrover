@@ -1,7 +1,9 @@
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 module Galaxy
 where
 
 import qualified Data.Edison.Assoc.StandardMap as E
+import qualified Data.Edison.Assoc as EApi
 
 import Math
 import Libaddutil.Named
@@ -72,6 +74,21 @@ data Galaxy a = Galaxy { galaxyname :: String
                        , starsystems :: E.FM Name (StarSystem a)
                        }
     deriving (Eq, Read, Show)
+
+class TreeContainer a k v where
+  content :: a -> E.FM k v
+
+instance TreeContainer (Planet a) Name (Planet a) where
+  content = satellites
+
+instance TreeContainer (Star a) Name (Planet a) where
+  content = planets
+
+instance TreeContainer (StarSystem a) Name (Star a) where
+  content = stars
+
+instance TreeContainer (Galaxy a) Name (StarSystem a) where
+  content = starsystems
 
 instance Named (Galaxy a) where
   name = galaxyname

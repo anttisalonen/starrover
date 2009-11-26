@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module ZipperGalaxy
 where
 
@@ -9,6 +10,8 @@ import Libaddutil.Named
 
 import Galaxy
 import Utils
+import qualified Data.Edison.Assoc.StandardMap as E
+import qualified Data.Edison.Seq.ListSeq as ES
 
 type GalaxyZipper a = (Galaxy a, Maybe (StarSystem a, Maybe (Star a, [Planet a])))
 
@@ -80,6 +83,24 @@ tryDown i (g, Just (ss, Just (s, allsats@(sat:sats)))) =
        Nothing -> Nothing
        Just x  -> Just $ (g, Just (ss, (Just (s, x:allsats))))
 
+tryDownNum :: Int -> GalaxyZipper a -> Maybe (GalaxyZipper a)
+tryDownNum i z@(g, Nothing) =
+  case safeIndex (E.keys $ starsystems g) i of
+    Nothing -> Nothing
+    Just x  -> tryDown x z
+tryDownNum i z@(g, Just (ss, Nothing)) =
+  case safeIndex (E.keys $ stars ss) i of
+    Nothing -> Nothing
+    Just x  -> tryDown x z
+tryDownNum i z@(g, Just (ss, Just (s, []))) =
+  case safeIndex (E.keys $ planets s) i of
+    Nothing -> Nothing
+    Just x  -> tryDown x z
+tryDownNum i z@(g, Just (ss, Just (s, (p:ps)))) =
+  case safeIndex (E.keys $ satellites p) i of
+    Nothing -> Nothing
+    Just x  -> tryDown x z
+
 up :: GalaxyZipper a -> GalaxyZipper a
 up z@(g, Nothing) = z
 up (g, Just (ss, Nothing)) = (g, Nothing)
@@ -106,4 +127,5 @@ zipperToNames z =
                     Nothing -> ""
                     Just x  -> name x
   in filter (not . null) ns
+
 

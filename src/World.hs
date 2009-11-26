@@ -1,4 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
 module World
 where
 
@@ -12,6 +11,7 @@ import Utils
 import System.Random
 import Control.Monad.State
 import qualified Data.Map as M
+import qualified Data.Edison.Assoc.StandardMap as E
 
 data World = World { galaxy  :: Galaxy Terrain
                    , time    :: GalaxyTime
@@ -29,10 +29,6 @@ data Relation a = Relation { relationship :: Int
                            , contracts :: [Contract a] }
 
 data Contract a = Embargo a
-
-class TreeContainer a b k c where
-  content :: a b k c -> b
-  child :: (TreeContainer x y z w) => a b k c -> k -> x y z w
 
 data Player = Player {playername :: String }
 
@@ -65,3 +61,4 @@ createWorld g numciv = do
           let cols = map (Colony "colony") collocs
           let empires = zipWith Empire enames [cols]
           return $ Just $ World g nullGalaxyTime (M.fromList (zip ns empires)) nullPlayer
+

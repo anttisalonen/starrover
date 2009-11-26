@@ -211,7 +211,7 @@ createRockyTerrain gs p = do
   gs' <- mapMaybeM (createNaturalGood massmult (planettype p)) gs
   return (Terrain gs')
 
-createNaturalGood :: Flt -> PlanetType -> Good -> Rnd (Maybe Resource)
+createNaturalGood :: Flt -> PlanetType -> Good -> Rnd (Maybe (Resource, ResourceUnit))
 createNaturalGood massmult pt g = 
   case natural g of
     Nothing                       -> return Nothing
@@ -226,7 +226,8 @@ createNaturalGood massmult pt g =
         then return Nothing
         else do
           mult <- randomRM (0, initial)
-          return (Just (g, floor (mult * massmult)))
+          let v = floor $ mult * massmult
+          return $ Just ((g, v), v)
 
 civnames :: [String]
 civnames = ["humans",

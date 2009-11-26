@@ -88,3 +88,8 @@ mapMaybeM f l = mapM f l >>= return . catMaybes
 stdMap :: (Named a) => [a] -> M.Map Name a
 stdMap xs = M.fromList (zip (map name xs) xs)
 
+safeIndex :: [a] -> Int -> Maybe a
+safeIndex [] _ = Nothing
+safeIndex (x:xs) n | n <= 0    = Just x
+                   | otherwise = safeIndex xs (n - 1)
+

@@ -2,6 +2,7 @@ module Main
 where
 
 import Data.Maybe
+import Control.Monad
 
 import DataCreate
 import GalaxyStats
@@ -11,6 +12,8 @@ import Galaxy
 import World
 import Civilization
 import ZipperGalaxyUtils
+import Utils
+import qualified Data.Edison.Assoc.StandardMap as E
 
 main :: IO ()
 main = do
@@ -78,18 +81,33 @@ getZipperInput :: (Show a) => GalaxyZipper a -> IO (ZipperInput a)
 getZipperInput z = do
   putStrLn (genInfo z)
   c <- getLine
-  case length c of
-    1          -> if not (null c)
-                    then case head c of
-                           'q' -> return Nothing
-                           's' -> putStrLn (galaxyStats (galaxyInZipper z)) >> getZipperInput z
-                           _   -> getZipperInput z
-                    else getZipperInput z
-    _          -> if c == ""
-                    then return $ Just (up z) 
-                    else case tryDown c z of
-                           Just nz -> return $ Just nz
-                           Nothing -> getZipperInput z
+  let num :: Maybe Int
+      num = liftM fst $ safeHead (reads c)
+  case num of
+    Nothing -> strInput c
+    Just n  -> numInput n
+
+ where 
+   strInput c = do
+    case length c of
+      1          -> if not (null c)
+                      then case head c of
+                             'q' -> return Nothing
+                             's' -> putStrLn (galaxyStats (galaxyInZipper z)) >> getZipperInput z
+                             _   -> getZipperInput z
+                      else getZipperInput z
+      _          -> if c == ""
+                      then return $ Just (up z) 
+                      else proceed c z
+
+   numInput n = do
+     case tryDownNum (n - 1) z of
+       Just nz -> return $ Just nz
+       Nothing -> getZipperInput z
+
+   proceed c z = case tryDown c z of
+                   Just nz -> return $ Just nz
+                   Nothing -> getZipperInput z
 
 browseGalaxy :: (Show a) => GalaxyZipper a -> IO ()
 browseGalaxy z = do
