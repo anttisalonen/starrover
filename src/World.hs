@@ -13,9 +13,11 @@ import Control.Monad.State
 import qualified Data.Map as M
 import qualified Data.Edison.Assoc.StandardMap as E
 
+type EmpireKey = Name
+
 data World = World { galaxy  :: Galaxy Terrain
                    , time    :: GalaxyTime
-                   , empires :: M.Map Int Empire
+                   , empires :: M.Map EmpireKey Empire
                    , player  :: Player
                    }
 
@@ -44,6 +46,14 @@ nullPlayer = Player ""
 habitablePlanetsZ :: Galaxy Terrain -> [GalaxyZipper Terrain]
 habitablePlanetsZ g = filter sustainsLifeZ (ZipperGalaxyUtils.allBodies g)
 
+civnames :: [String]
+civnames = ["humans",
+            "aliens",
+            "ant insect animals",
+            "slimy aliens",
+            "cosmic hive snakes"
+           ]
+
 createWorld :: Galaxy Terrain -> Int -> Rnd (Maybe World)
 createWorld g numciv = do
   let ps = habitablePlanetsZ g
@@ -55,10 +65,9 @@ createWorld g numciv = do
       if length cs < numciv 
         then return Nothing
         else do
-          let ns = [1..]
-          let enames = (map show [1..])
+          let enames = civnames
           let collocs = map zipperToNames ps
           let cols = map (Colony "colony") collocs
           let empires = zipWith Empire enames [cols]
-          return $ Just $ World g nullGalaxyTime (M.fromList (zip ns empires)) nullPlayer
+          return $ Just $ World g nullGalaxyTime (namedsToMap empires) nullPlayer
 

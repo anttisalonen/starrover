@@ -70,6 +70,9 @@ data Ruleset = Ruleset { goods     :: M.Map String Good
                        }
     deriving (Show)
 
+instance Named Empire where
+  name = empirename
+
 instance Named Good where
   name = goodname
 
