@@ -10,6 +10,8 @@ import Statistics
 import Utils
 import System.Random
 import Control.Monad.State
+import Data.Maybe (mapMaybe)
+import Data.List (foldl')
 import qualified Data.Map as M
 import qualified Data.Edison.Assoc.StandardMap as E
 
@@ -69,8 +71,20 @@ createWorld g numciv = do
         then return Nothing
         else do
           let enames = civnames
-          let collocs = map zipperToNames ps
+          let collocs = map zipperToNames cs
           let cols = map (Colony "colony" colonyStartPopulation) collocs
           let empires = zipWith Empire enames [cols]
-          return $ Just $ World g nullGalaxyTime (namedsToMap empires) nullPlayer
+          return $ Just $ World 
+               (foldl' (\g' pn -> setLifeFlagOnPlanet True pn g') 
+                       g
+                       (map planetname (mapMaybe satelliteInZipper cs)))
+               nullGalaxyTime 
+               (namedsToMap empires) 
+               nullPlayer
+
+maybeMap :: (a -> b) -> [Maybe a] -> [b]
+maybeMap f = foldr fun []
+  where fun m acc = case m of
+                      Nothing -> acc
+                      Just x  -> f x : acc
 

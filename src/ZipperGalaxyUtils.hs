@@ -11,6 +11,7 @@ import Galaxy
 import DataFunction
 import Libaddutil.Named
 import Utils
+import Civilization
 
 findZipperGalaxyToPlanet :: (Eq a) => Planet a -> Galaxy a -> Maybe (GalaxyZipper a)
 findZipperGalaxyToPlanet p g = firstMaybe (findZipperStarSystemToPlanet p g) (M.elems (Galaxy.starsystems g))
@@ -36,6 +37,9 @@ genInfo z = galaxyInfo z ++
   (smallInfo z starsystemInZipper starSystemInfo) ++
   (smallInfo z starInZipper starInfo) ++
   (smallInfo z satelliteInZipper satelliteInfo)
+
+pplInfo :: [Empire] -> GalaxyZipper Terrain -> String
+pplInfo es z = genInfo z
 
 galaxyInfo :: (Show a) => GalaxyZipper a -> String
 galaxyInfo z = gname ++ "\n" ++ sysinfo

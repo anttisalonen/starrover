@@ -200,16 +200,16 @@ createTerrain gs p =
     Planetoid         -> createRockyTerrain gs p
     NoAtmosphere      -> createRockyTerrain gs p
     RockyPlanet _     -> createRockyTerrain gs p
-    SmallGasGiant     -> return (Terrain [])
-    MediumGasGiant    -> return (Terrain [])
-    LargeGasGiant     -> return (Terrain [])
-    VeryLargeGasGiant -> return (Terrain [])
+    SmallGasGiant     -> return (Terrain [] False)
+    MediumGasGiant    -> return (Terrain [] False)
+    LargeGasGiant     -> return (Terrain [] False)
+    VeryLargeGasGiant -> return (Terrain [] False)
 
 createRockyTerrain :: [Good] -> Planet () -> Rnd Terrain
 createRockyTerrain gs p = do
   massmult <- randomRM (0, 1000 * planetMass p)
   gs' <- mapMaybeM (createNaturalGood massmult (planettype p)) gs
-  return (Terrain gs')
+  return (Terrain gs' False)
 
 createNaturalGood :: Flt -> PlanetType -> Good -> Rnd (Maybe (Resource, ResourceUnit))
 createNaturalGood massmult pt g = 
@@ -229,11 +229,4 @@ createNaturalGood massmult pt g =
           let v = floor $ mult * massmult
           return $ Just ((g, v), v)
 
-civnames :: [String]
-civnames = ["humans",
-            "aliens",
-            "ant insect animals",
-            "slimy aliens",
-            "cosmic hive snakes"
-           ]
 

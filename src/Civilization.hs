@@ -38,13 +38,15 @@ data Natural = Natural { neededAtmosphere :: [Atmosphere] -- OR'ed
                        }
     deriving (Eq, Read, Show)
 
-data Terrain = Terrain { terraingoods :: [(Resource, ResourceUnit)] }
+data Terrain = Terrain { terraingoods :: [(Resource, ResourceUnit)]
+                       , intelligence :: Bool }
     deriving (Eq)
 
 type Resource = (Good, ResourceUnit)
 
 instance Show Terrain where
-  show t = "    " ++ concatMap ((++ " ") . show) (terraingoods t)
+  show t = "    " ++ concatMap ((++ " ") . show) (terraingoods t) ++ showInt
+    where showInt = if intelligence t then " - Intelligence" else ""
 
 data Building = Building { buildingname :: String
                          , goodsToBuild :: [(Good, ResourceUnit)]
@@ -116,6 +118,9 @@ regenerate :: Flt -> Terrain -> Terrain
 regenerate coeff t = let nr = map (regenRes coeff) (terraingoods t)
                      in t{terraingoods = nr}
 
+setLifeFlag :: Bool -> Terrain -> Terrain
+setLifeFlag f t = t{intelligence = f}
+
 regenRes :: Flt -> (Resource, ResourceUnit) -> (Resource, ResourceUnit)
 regenRes coeff r@(_, m) = (regenerateGood coeff r, m)
 
@@ -165,4 +170,7 @@ updateBodies f s = let s' = updatePlanets f s
 
 regenerateGalaxy :: Flt -> Galaxy Terrain -> Galaxy Terrain
 regenerateGalaxy coeff = updateStarsystems $ updateStars $ updateBodies $ updateTerrain $ regenerate coeff
+
+setLifeFlagOnPlanet :: Bool -> Name -> Galaxy Terrain -> Galaxy Terrain
+setLifeFlagOnPlanet f n = updateStarsystems $ updateStars $ updateBodies $ (\p -> if name p == n then (updateTerrain (setLifeFlag f) p) else p)
 
