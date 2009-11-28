@@ -124,7 +124,7 @@ getZipperInput z = do
    numInput n = do
      case tryDownNum (n - 1) z of
        Just nz -> return $ Just nz
-       Nothing -> getZipperInput z
+       Nothing -> return $ Just (up z)
 
    proceed c z = case tryDown c z of
                    Just nz -> return $ Just nz

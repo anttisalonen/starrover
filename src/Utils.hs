@@ -90,6 +90,7 @@ stdMap xs = M.fromList (zip (map name xs) xs)
 
 safeIndex :: [a] -> Int -> Maybe a
 safeIndex [] _ = Nothing
-safeIndex (x:xs) n | n <= 0    = Just x
+safeIndex (x:xs) n | n < 0     = Nothing
+                   | n == 0    = Just x
                    | otherwise = safeIndex xs (n - 1)
 
