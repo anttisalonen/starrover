@@ -54,6 +54,9 @@ civnames = ["humans",
             "cosmic hive snakes"
            ]
 
+colonyStartPopulation :: ResourceUnit
+colonyStartPopulation = 100
+
 createWorld :: Galaxy Terrain -> Int -> Rnd (Maybe World)
 createWorld g numciv = do
   let ps = habitablePlanetsZ g
@@ -67,7 +70,7 @@ createWorld g numciv = do
         else do
           let enames = civnames
           let collocs = map zipperToNames ps
-          let cols = map (Colony "colony") collocs
+          let cols = map (Colony "colony" colonyStartPopulation) collocs
           let empires = zipWith Empire enames [cols]
           return $ Just $ World g nullGalaxyTime (namedsToMap empires) nullPlayer
 

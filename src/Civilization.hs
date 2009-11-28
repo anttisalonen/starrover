@@ -62,6 +62,7 @@ data Empire = Empire { empirename :: String
                      }
 
 data Colony = Colony { colonyname :: String
+                     , population :: ResourceUnit
                      , location   :: [String]
                      }
 
@@ -69,6 +70,9 @@ data Ruleset = Ruleset { goods     :: M.Map String Good
                        , buildings :: M.Map String Building
                        }
     deriving (Show)
+
+instance Named Colony where
+  name = colonyname
 
 instance Named Empire where
   name = empirename

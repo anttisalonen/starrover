@@ -4,6 +4,8 @@ where
 import Data.Maybe
 import Control.Monad
 
+import Text.Printf
+import Libaddutil.Named
 import DataCreate
 import GalaxyStats
 import DataFunction
@@ -12,6 +14,7 @@ import Galaxy
 import World
 import Civilization
 import ZipperGalaxyUtils
+import Math
 import Utils
 import qualified Data.Edison.Assoc.StandardMap as E
 
@@ -45,7 +48,13 @@ browseLife w = do
     Just v  -> browseLife (timePass v w)
 
 lifeInfo :: World -> String
-lifeInfo w = ""
+lifeInfo w = (concat . E.elements . E.map dispEmpire) (empires w)
+
+dispEmpire :: Empire -> String
+dispEmpire e = printf "%s - %s\n" (name e) (concatMap dispColony (colonies e))
+
+dispColony :: Colony -> String
+dispColony c = printf "\t%s - %s - %s\n" (name c) (show (population c)) (show (location c))
 
 getLifeInput :: World -> IO (Maybe Int)
 getLifeInput w = do
@@ -58,8 +67,20 @@ getLifeInput w = do
 timePass :: Int -> World -> World
 timePass i w | i <= 0    = w
              | otherwise =
-  let newgal = regenerateGalaxy 0.05 (galaxy w)
+  let newgal  = regenerateGalaxy 0.05 (galaxy w)
+      newemps = E.map (updateEmpire 1) (empires w)
   in timePass (i - 1) (w{galaxy = newgal})
+
+updateEmpire :: Flt -> Empire -> Empire
+updateEmpire t e = 
+  let newcol = map (popgrow t) (colonies e)
+  in e{colonies = newcol}
+
+popgrow :: Flt -> Colony -> Colony
+popgrow t c = 
+  let oldpop = population c
+      newpop = floor (fromIntegral oldpop * 1.1)
+  in c{population = newpop}
 
 getMainMenuInput :: IO MainMenuInput
 getMainMenuInput = do
