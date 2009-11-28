@@ -67,7 +67,7 @@ createPlanet genfunc startemp name orbitradius = do
   satellites <- zipWithM (createSatellite (0.00001 * mass) (0.01 * mass) genfunc startemp) (bodyNames name) (replicate numsatellites orbitradius)
   let temp = planetTemperature'' startemp orbitradius atmosphere
   cont <- genfunc (Planet name orbit (BodyPhysics mass) atmosphere temp M.empty ())
-  return $! Planet name orbit (BodyPhysics mass) atmosphere temp (stdMap satellites) cont
+  return $! Planet name orbit (BodyPhysics mass) atmosphere temp (namedsToMap satellites) cont
 
 bodyNames :: String -> [String]
 bodyNames = namesFromBasenameNum
@@ -96,7 +96,7 @@ createStar' genfunc name maxplanetorbitradius orbit spectraltype = do
   let planetnames = bodyNames name
   planetorbitradiuses <- separate `fmap` sort `fmap` replicateM numplanets (randomRM (0.0001, min (fromIntegral t * 2 / 120) maxplanetorbitradius))
   planets <- zipWithM (createPlanet genfunc t) planetnames planetorbitradiuses
-  return $! Star name t orbit (stdMap (filter (\p -> planetTemperature' t p > 30 && planetTemperature' t p < t `div` 4) planets))
+  return $! Star name t orbit (namedsToMap (filter (\p -> planetTemperature' t p > 30 && planetTemperature' t p < t `div` 4) planets))
 
 namesFromBasenameCap :: String -> [String]
 namesFromBasenameCap n = zipWith (++) (repeat (n ++ " ")) (map (:[]) ['A' .. 'Z'])
@@ -133,7 +133,7 @@ createStarSystem genfunc ssname sspos = do
   singular <- chance 2 3 
   n <- if singular then return 1 else randomRM (2, 6 :: Int)
   stars <- (createStars genfunc) ssname n
-  return $! StarSystem ssname sspos (stdMap stars)
+  return $! StarSystem ssname sspos (namedsToMap stars)
 
 create2DPoint :: (Flt, Flt) -> Rnd Vector3
 create2DPoint (minc, maxc) = do
@@ -157,7 +157,7 @@ createGalaxy genfunc galname ssnames = do
   let dim = sqrt (fromIntegral numss) * ssSpacingCoefficient -- TODO: when 3d galaxy, use cbrt
   points <- replicateM numss (create3DPoint (-dim, dim))
   sss <- zipWithM (createStarSystem genfunc) ssnames points
-  return $! Galaxy galname (stdMap sss)
+  return $! Galaxy galname (namedsToMap sss)
 
 nearsystems :: [String]
 nearsystems = ["Alpha Centauri",
@@ -200,16 +200,16 @@ createTerrain gs p =
     Planetoid         -> createRockyTerrain gs p
     NoAtmosphere      -> createRockyTerrain gs p
     RockyPlanet _     -> createRockyTerrain gs p
-    SmallGasGiant     -> return (Terrain [] False)
-    MediumGasGiant    -> return (Terrain [] False)
-    LargeGasGiant     -> return (Terrain [] False)
-    VeryLargeGasGiant -> return (Terrain [] False)
+    SmallGasGiant     -> return (Terrain [] [])
+    MediumGasGiant    -> return (Terrain [] [])
+    LargeGasGiant     -> return (Terrain [] [])
+    VeryLargeGasGiant -> return (Terrain [] [])
 
 createRockyTerrain :: [Good] -> Planet () -> Rnd Terrain
 createRockyTerrain gs p = do
   massmult <- randomRM (0, 1000 * planetMass p)
   gs' <- mapMaybeM (createNaturalGood massmult (planettype p)) gs
-  return (Terrain gs' False)
+  return (Terrain gs' [])
 
 createNaturalGood :: Flt -> PlanetType -> Good -> Rnd (Maybe (Resource, ResourceUnit))
 createNaturalGood massmult pt g = 

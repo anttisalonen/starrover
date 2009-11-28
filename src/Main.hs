@@ -23,7 +23,8 @@ main = do
   let g = testRandomGalaxy 22 24
   let w = testRandomWorld g 22 1
   putStrLn (galaxyStats g)
-  print testPlanetCreatingZipper
+  let tplc = testPlanetCreatingZipper
+  when (not tplc) $ putStrLn "!!! Warning: zipper test failed!"
   case w of
     Nothing -> putStrLn "Unable to create world?"
     Just jw -> do
@@ -36,7 +37,7 @@ mainMenu w = do
   case i of
     Quit   -> return ()
     Life   -> browseLife w >>= mainMenu
-    Zipper -> browseGalaxy (g, Nothing) >> mainMenu w
+    Zipper -> browseGalaxy' (empires w) (g, Nothing) >> mainMenu w
 
 data MainMenuInput = Zipper | Life | Quit
 
@@ -49,12 +50,6 @@ browseLife w = do
 
 lifeInfo :: World -> String
 lifeInfo w = (concat . E.elements . E.map dispEmpire) (empires w)
-
-dispEmpire :: Empire -> String
-dispEmpire e = printf "%s - %s\n" (name e) (concatMap dispColony (colonies e))
-
-dispColony :: Colony -> String
-dispColony c = printf "\t%s - %s - %s\n" (name c) (show (population c)) (show (location c))
 
 getLifeInput :: World -> IO (Maybe Int)
 getLifeInput w = do
@@ -73,7 +68,7 @@ timePass i w | i <= 0    = w
 
 updateEmpire :: Flt -> Empire -> Empire
 updateEmpire t e = 
-  let newcol = map (popgrow t) (colonies e)
+  let newcol = E.map (popgrow t) (colonies e)
   in e{colonies = newcol}
 
 popgrow :: Flt -> Colony -> Colony
@@ -98,9 +93,9 @@ getMainMenuInput = do
 
 type ZipperInput a = Maybe (GalaxyZipper a)
 
-getZipperInput :: (Show a) => GalaxyZipper a -> IO (ZipperInput a)
-getZipperInput z = do
-  putStrLn (genInfo z)
+getZipperInput :: (Show a) => (GalaxyZipper a -> String) -> GalaxyZipper a -> IO (ZipperInput a)
+getZipperInput showfunc z = do
+  putStrLn $ showfunc z
   c <- getLine
   let num :: Maybe Int
       num = liftM fst $ safeHead (reads c)
@@ -114,9 +109,9 @@ getZipperInput z = do
       1          -> if not (null c)
                       then case head c of
                              'q' -> return Nothing
-                             's' -> putStrLn (galaxyStats (galaxyInZipper z)) >> getZipperInput z
-                             _   -> getZipperInput z
-                      else getZipperInput z
+                             's' -> putStrLn (galaxyStats (galaxyInZipper z)) >> getZipperInput showfunc z
+                             _   -> getZipperInput showfunc z
+                      else getZipperInput showfunc z
       _          -> if c == ""
                       then return $ Just (up z) 
                       else proceed c z
@@ -128,14 +123,20 @@ getZipperInput z = do
 
    proceed c z = case tryDown c z of
                    Just nz -> return $ Just nz
-                   Nothing -> getZipperInput z
+                   Nothing -> getZipperInput showfunc z
 
 browseGalaxy :: (Show a) => GalaxyZipper a -> IO ()
-browseGalaxy z = do
-  i <- getZipperInput z
+browseGalaxy = someInput (getZipperInput (genInfo (\t -> show t)))
+
+someInput :: (a -> IO (Maybe a)) -> a -> IO ()
+someInput func x = do
+  i <- func x
   case i of
     Nothing -> return ()
-    Just nz -> browseGalaxy nz
+    Just nx -> someInput func nx
+
+browseGalaxy' :: E.FM CivKey Empire -> GalaxyZipper Terrain -> IO ()
+browseGalaxy' e = someInput (getZipperInput (genInfo (terrainInfo e)))
 
 testPlanetCreatingZipper :: Bool
 testPlanetCreatingZipper =

@@ -8,6 +8,7 @@ import qualified Data.Map as M
 import Math
 import Statistics
 import Libaddutil.Named
+import Debug.Trace
 
 type Name = String
 
@@ -85,12 +86,22 @@ show3f f = printf "%.3f" f
 mapMaybeM :: (Monad m) => (a -> m (Maybe b)) -> [a] -> m [b]
 mapMaybeM f l = mapM f l >>= return . catMaybes
 
-stdMap :: (Named a) => [a] -> M.Map Name a
-stdMap xs = M.fromList (zip (map name xs) xs)
+namedsToMap :: (Named a) => [a] -> M.Map String a
+namedsToMap ns = M.fromList (zip (map name ns) ns)
 
 safeIndex :: [a] -> Int -> Maybe a
 safeIndex [] _ = Nothing
 safeIndex (x:xs) n | n < 0     = Nothing
                    | n == 0    = Just x
                    | otherwise = safeIndex xs (n - 1)
+
+debug :: a -> String -> a
+debug = flip trace
+
+pairToLists :: [a] -> [a] -> [[a]]
+pairToLists l1 l2 = go l1 l2 []
+  where go []     _      acc = acc
+        go _      []     acc = acc
+        go (x:xs) (y:ys) acc = [x,y]:go xs ys acc
+
 

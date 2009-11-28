@@ -5,12 +5,15 @@ import qualified Data.Map as M
 import Data.Maybe
 import Data.Tree
 
+import Text.Printf
 import Galaxy
 import Math
 import ZipperGalaxy
 import Libaddutil.Named
 import Utils
 import qualified Data.Edison.Assoc.StandardMap as E
+
+type CivKey = Name
 
 type ResourceUnit = Integer
 
@@ -39,14 +42,13 @@ data Natural = Natural { neededAtmosphere :: [Atmosphere] -- OR'ed
     deriving (Eq, Read, Show)
 
 data Terrain = Terrain { terraingoods :: [(Resource, ResourceUnit)]
-                       , intelligence :: Bool }
+                       , colony       :: [Name] }
     deriving (Eq)
 
 type Resource = (Good, ResourceUnit)
 
 instance Show Terrain where
-  show t = "    " ++ concatMap ((++ " ") . show) (terraingoods t) ++ showInt
-    where showInt = if intelligence t then " - Intelligence" else ""
+  show t = "    " ++ concatMap ((++ " ") . show) (terraingoods t)
 
 data Building = Building { buildingname :: String
                          , goodsToBuild :: [(Good, ResourceUnit)]
@@ -60,13 +62,25 @@ instance Show Building where
   show = name
 
 data Empire = Empire { empirename :: String
-                     , colonies :: [Colony]
+                     , colonies   :: E.FM CivKey Colony
                      }
+
+instance Show Empire where
+  show = dispEmpire
+
+dispEmpire :: Empire -> String
+dispEmpire e = printf "%s - %d colonies" (name e) (E.size (colonies e))
 
 data Colony = Colony { colonyname :: String
                      , population :: ResourceUnit
                      , location   :: [String]
                      }
+
+dispColony :: Colony -> String
+dispColony c = printf "\t%s - %s - %s" (name c) (show (population c)) (show (location c))
+
+instance Show Colony where
+  show = dispColony
 
 data Ruleset = Ruleset { goods     :: M.Map String Good
                        , buildings :: M.Map String Building
@@ -90,9 +104,6 @@ stdRules = Ruleset stdGoodsMap stdBuildingsMap
 stdGoodsMap = namedsToMap stdGoods
 
 stdBuildingsMap = namedsToMap stdBuildings
-
-namedsToMap :: (Named a) => [a] -> M.Map String a
-namedsToMap ns = M.fromList (zip (map name ns) ns)
 
 --             Name            Natural            atm        growth  initial needed goods   work building food bonus    lux med  weap
 wood    = Good "Wood"         (Just $ Natural [WaterWeatherSystem] 1.0 1.0)  []             1.0 Nothing     0    []     0   0    0.01
@@ -118,8 +129,8 @@ regenerate :: Flt -> Terrain -> Terrain
 regenerate coeff t = let nr = map (regenRes coeff) (terraingoods t)
                      in t{terraingoods = nr}
 
-setLifeFlag :: Bool -> Terrain -> Terrain
-setLifeFlag f t = t{intelligence = f}
+setColony :: EmpireLocation -> Terrain -> Terrain
+setColony f t = t{colony = f}
 
 regenRes :: Flt -> (Resource, ResourceUnit) -> (Resource, ResourceUnit)
 regenRes coeff r@(_, m) = (regenerateGood coeff r, m)
@@ -171,6 +182,27 @@ updateBodies f s = let s' = updatePlanets f s
 regenerateGalaxy :: Flt -> Galaxy Terrain -> Galaxy Terrain
 regenerateGalaxy coeff = updateStarsystems $ updateStars $ updateBodies $ updateTerrain $ regenerate coeff
 
-setLifeFlagOnPlanet :: Bool -> Name -> Galaxy Terrain -> Galaxy Terrain
-setLifeFlagOnPlanet f n = updateStarsystems $ updateStars $ updateBodies $ (\p -> if name p == n then (updateTerrain (setLifeFlag f) p) else p)
+type EmpireLocation = [Name]
+
+setColonyOnPlanet :: EmpireLocation -> Name -> Galaxy Terrain -> Galaxy Terrain
+setColonyOnPlanet f n = updateStarsystems $ updateStars $ updateBodies $ (\p -> if name p == n then (updateTerrain (setColony f) p) else p)
+
+terrainInfo :: E.FM CivKey Empire -> Terrain -> String
+terrainInfo es t =
+  case findColony es (colony t) of 
+    Nothing         -> ""
+    Just (emp, col) -> show emp ++ show col
+
+findColony :: E.FM CivKey Empire -> EmpireLocation -> Maybe (Empire, Colony)
+findColony _ []     = Nothing
+findColony m (e:es) = 
+  case E.lookupM e m of
+    Nothing -> Nothing
+    Just n  -> case findColony' (colonies n) es of
+                 Nothing -> Nothing
+                 Just c  -> Just (n, c)
+
+findColony' :: E.FM CivKey Colony -> EmpireLocation -> Maybe Colony
+findColony' _ []    = Nothing
+findColony' m (e:_) = E.lookupM e m
 

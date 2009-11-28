@@ -32,16 +32,16 @@ findZipperPlanetToPlanet p g ss s p' =
     then Just (g, Just (ss, Just (s, [p, p'])))
     else Nothing
 
-genInfo :: (Show a) => GalaxyZipper a -> String
-genInfo z = galaxyInfo z ++ 
+genInfo :: (a -> String) -> GalaxyZipper a -> String
+genInfo fun z = galaxyInfo z ++ 
   (smallInfo z starsystemInZipper starSystemInfo) ++
   (smallInfo z starInZipper starInfo) ++
-  (smallInfo z satelliteInZipper satelliteInfo)
+  (smallInfo z satelliteInZipper (satelliteInfo fun))
 
 pplInfo :: [Empire] -> GalaxyZipper Terrain -> String
-pplInfo es z = genInfo z
+pplInfo es z = genInfo (\_ -> "") z
 
-galaxyInfo :: (Show a) => GalaxyZipper a -> String
+galaxyInfo :: GalaxyZipper a -> String
 galaxyInfo z = gname ++ "\n" ++ sysinfo
   where g       = galaxyInZipper z
         gname   = "Galaxy name: " ++ name g
@@ -92,12 +92,13 @@ starInfo s z = starinfo ++ "\n" ++ planetinfo
                        Just _  -> ""
                        Nothing -> getXInfoFromY s planets (genTitle infoSatellite)
 
-satelliteInfo s z = satinfo ++ satsinfo ++ (if null datainfo then "" else "\n" ++ datainfo)
+satelliteInfo :: (a -> String) -> Planet a -> b -> String
+satelliteInfo fun s z = satinfo ++ satsinfo ++ (if null datainfo then "" else "\n" ++ datainfo)
   where satinfo = infoSatellite s
-        satsinfo = if (M.null (satellites s)) then "" else "\n" ++ getXInfoFromY s satellites (genTitle (flip satelliteInfo z))
-        datainfo = show (info s)
+        satsinfo = if (M.null (satellites s)) then "" else "\n" ++ getXInfoFromY s satellites (genTitle (flip (satelliteInfo fun) z))
+        datainfo = fun (info s)
 
-infoSatellite :: (Show a) => Planet a -> String
+infoSatellite :: Planet a -> String
 infoSatellite p = 
   "Name: " ++ name p ++ " - " ++
   "Orbit radius: " ++ (show3f . orbitradius . orbit) p ++ " - " ++

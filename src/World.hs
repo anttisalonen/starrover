@@ -12,14 +12,11 @@ import System.Random
 import Control.Monad.State
 import Data.Maybe (mapMaybe)
 import Data.List (foldl')
-import qualified Data.Map as M
 import qualified Data.Edison.Assoc.StandardMap as E
-
-type EmpireKey = Name
 
 data World = World { galaxy  :: Galaxy Terrain
                    , time    :: GalaxyTime
-                   , empires :: M.Map EmpireKey Empire
+                   , empires :: E.FM CivKey Empire
                    , player  :: Player
                    }
 
@@ -70,14 +67,13 @@ createWorld g numciv = do
       if length cs < numciv 
         then return Nothing
         else do
-          let enames = civnames
-          let collocs = map zipperToNames cs
-          let cols = map (Colony "colony" colonyStartPopulation) collocs
-          let empires = zipWith Empire enames [cols]
+          let cols = map ((:[]) . Colony "colony" colonyStartPopulation) (map zipperToNames cs)
+          let empires = zipWith Empire civnames (map namedsToMap cols)
+          let collocs = pairToLists civnames (repeat "colony")
           return $ Just $ World 
-               (foldl' (\g' pn -> setLifeFlagOnPlanet True pn g') 
+               (foldl' (\g' (cl, pn) -> setColonyOnPlanet cl pn g') 
                        g
-                       (map planetname (mapMaybe satelliteInZipper cs)))
+                       (zip collocs (map planetname (mapMaybe satelliteInZipper cs))))
                nullGalaxyTime 
                (namedsToMap empires) 
                nullPlayer
