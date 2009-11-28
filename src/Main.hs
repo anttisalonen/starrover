@@ -21,7 +21,7 @@ import qualified Data.Edison.Assoc.StandardMap as E
 main :: IO ()
 main = do
   let g = testRandomGalaxy 22 24
-  let w = testRandomWorld g 22 1
+  let w = testRandomWorld g 22 5
   putStrLn (galaxyStats g)
   let tplc = testPlanetCreatingZipper
   when (not tplc) $ putStrLn "!!! Warning: zipper test failed!"
@@ -49,7 +49,7 @@ browseLife w = do
     Just v  -> browseLife (timePass v w)
 
 lifeInfo :: World -> String
-lifeInfo w = (concat . E.elements . E.map dispEmpire) (empires w)
+lifeInfo w = (concat . map (++ "\n") . E.elements . E.map dispEmpire) (empires w)
 
 getLifeInput :: World -> IO (Maybe Int)
 getLifeInput w = do
