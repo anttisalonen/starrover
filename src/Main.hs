@@ -36,28 +36,53 @@ mainMenu w = do
   i <- getMainMenuInput
   case i of
     Quit   -> return ()
-    Life   -> browseLife w >>= mainMenu
+    Life   -> lifeMenu w >>= mainMenu
     Zipper -> browseGalaxy' (empires w) (g, Nothing) >> mainMenu w
 
 data MainMenuInput = Zipper | Life | Quit
 
-browseLife :: World -> IO World
-browseLife w = do
+lifeMenu :: World -> IO World
+lifeMenu w = do
   i <- getLifeInput w
   case i of
-    Nothing -> return w
-    Just v  -> browseLife (timePass v w)
+    QuitLife   -> return w
+    Rounds v   -> lifeMenu (timePass v w)
+    BrowseLife -> browseLife (newEmpireZipper w) >> lifeMenu w
+
+browseLife :: EmpireZipper -> IO ()
+browseLife z = do
+  putStrLn $ empireZipperInfo z
+  mz <- getBrowseLifeInput z
+  case mz of
+    Nothing -> return ()
+    Just nz -> browseLife nz
+
+empireZipperInfo :: EmpireZipper -> String
+empireZipperInfo e = ""
+
+getBrowseLifeInput :: EmpireZipper -> IO (Maybe EmpireZipper)
+getBrowseLifeInput z = do
+  c <- getLine
+  if null c 
+    then return Nothing
+    else if c == "up" 
+           then return $ Just $ upEZ z
+           else case tryDownEZ c z of
+                  Nothing -> getBrowseLifeInput z
+                  Just nz -> return $ Just nz
 
 lifeInfo :: World -> String
 lifeInfo w = (concat . map (++ "\n") . E.elements . E.map dispEmpire) (empires w)
 
-getLifeInput :: World -> IO (Maybe Int)
+data LifeInput = Rounds Int | BrowseLife | QuitLife
+
+getLifeInput :: World -> IO LifeInput
 getLifeInput w = do
   putStrLn (lifeInfo w)
   c <- getLine
   case reads c of
-    [(num, _)] -> return (Just num)
-    _          -> return Nothing
+    [(num, _)] -> return (Rounds num)
+    _          -> return $ if null c then QuitLife else BrowseLife
 
 timePass :: Int -> World -> World
 timePass i w | i <= 0    = w

@@ -104,4 +104,10 @@ pairToLists l1 l2 = go l1 l2 []
         go _      []     acc = acc
         go (x:xs) (y:ys) acc = [x,y]:go xs ys acc
 
+maybeMap :: (a -> b) -> [Maybe a] -> [b]
+maybeMap f = foldr fun []
+  where fun m acc = case m of
+                      Nothing -> acc
+                      Just x  -> f x : acc
+
 

@@ -78,9 +78,16 @@ createWorld g numciv = do
                (namedsToMap empires) 
                nullPlayer
 
-maybeMap :: (a -> b) -> [Maybe a] -> [b]
-maybeMap f = foldr fun []
-  where fun m acc = case m of
-                      Nothing -> acc
-                      Just x  -> f x : acc
+data EmpireZipper = EmpireZipper { empiresInZipper  :: (E.FM CivKey Empire)
+                                 , coloniesInZipper :: (Maybe (Name, E.FM CivKey Colony))
+                                 }
+
+newEmpireZipper :: World -> EmpireZipper
+newEmpireZipper w = EmpireZipper (empires w) Nothing
+
+upEZ :: EmpireZipper -> EmpireZipper
+upEZ z = z
+
+tryDownEZ :: String -> EmpireZipper -> Maybe EmpireZipper
+tryDownEZ s z = Nothing
 
