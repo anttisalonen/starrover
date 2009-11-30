@@ -188,7 +188,7 @@ setColonyOnPlanet :: EmpireLocation -> Name -> Galaxy Terrain -> Galaxy Terrain
 setColonyOnPlanet f n = updateStarsystems $ updateStars $ updateBodies $ (\p -> if name p == n then (updateTerrain (setColony f) p) else p)
 
 terrainInfo :: E.FM CivKey Empire -> Terrain -> String
-terrainInfo es t =
+terrainInfo es t = show t ++
   case findColony es (colony t) of 
     Nothing         -> ""
     Just (emp, col) -> show emp ++ show col
