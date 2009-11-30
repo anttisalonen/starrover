@@ -95,8 +95,11 @@ createStar' genfunc name maxplanetorbitradius orbit spectraltype = do
   numplanets <- randomRM (64, 128)
   let planetnames = bodyNames name
   planetorbitradiuses <- separate `fmap` sort `fmap` replicateM numplanets (randomRM (0.0001, min (fromIntegral t * 2 / 120) maxplanetorbitradius))
-  planets <- zipWithM (createPlanet genfunc t) planetnames planetorbitradiuses
-  return $! Star name t orbit (namedsToMap (filter (\p -> planetTemperature' t p > 30 && planetTemperature' t p < t `div` 4) planets))
+  planets <- zipWithM (createPlanet genfunc t) (repeat "") planetorbitradiuses
+  let planets' = filter (\p -> planetTemperature' t p > 30 && planetTemperature' t p < t `div` 4) planets
+  let changename n p = p{planetname = n}
+  let planets'' = zipWith changename planetnames planets'
+  return $! Star name t orbit (namedsToMap planets'')
 
 namesFromBasenameCap :: String -> [String]
 namesFromBasenameCap n = zipWith (++) (repeat (n ++ " ")) (map (:[]) ['A' .. 'Z'])
