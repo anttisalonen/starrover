@@ -71,6 +71,9 @@ instance Show Empire where
 dispEmpire :: Empire -> String
 dispEmpire e = printf "%s - %d colonies" (name e) (E.size (colonies e))
 
+dispColoniesInfo :: Empire -> String
+dispColoniesInfo = concatMap dispColony . E.elements . colonies
+
 data Colony = Colony { colonyname :: String
                      , population :: ResourceUnit
                      , location   :: [String]
@@ -191,7 +194,7 @@ terrainInfo :: E.FM CivKey Empire -> Terrain -> String
 terrainInfo es t = show t ++
   case findColony es (colony t) of 
     Nothing         -> ""
-    Just (emp, col) -> show emp ++ show col
+    Just (emp, col) -> "\n\t" ++ show emp ++ show col
 
 findColony :: E.FM CivKey Empire -> EmpireLocation -> Maybe (Empire, Colony)
 findColony _ []     = Nothing

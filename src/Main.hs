@@ -58,27 +58,38 @@ browseLife z = do
     Just nz -> browseLife nz
 
 empireZipperInfo :: EmpireZipper -> String
-empireZipperInfo e = ""
+empireZipperInfo (es, Nothing) = lifeInfo es
+empireZipperInfo (es, Just (e, Nothing)) = dispEmpire e ++ "\n" ++ dispColoniesInfo e
+empireZipperInfo (es, Just (e, Just c)) = dispColony c
 
 getBrowseLifeInput :: EmpireZipper -> IO (Maybe EmpireZipper)
 getBrowseLifeInput z = do
+  putStrLn "Name of thing to inspect"
   c <- getLine
   if null c 
     then return Nothing
     else if c == "up" 
            then return $ Just $ upEZ z
            else case tryDownEZ c z of
-                  Nothing -> getBrowseLifeInput z
-                  Just nz -> return $ Just nz
+                  Nothing -> do
+                               putStrLn "Not found"
+                               getBrowseLifeInput z
+                  Just nz -> do
+                               putStrLn "Found way down"
+                               return $ Just nz
 
-lifeInfo :: World -> String
-lifeInfo w = (concat . map (++ "\n") . E.elements . E.map dispEmpire) (empires w)
+lifeInfo :: E.FM CivKey Empire -> String
+lifeInfo = concat . map (++ "\n") . E.elements . E.map dispEmpire
 
 data LifeInput = Rounds Int | BrowseLife | QuitLife
 
 getLifeInput :: World -> IO LifeInput
 getLifeInput w = do
-  putStrLn (lifeInfo w)
+  putStrLn (lifeInfo (empires w))
+  putStrLn "Type in:"
+  putStrLn " - Number to run rounds"
+  putStrLn " - nothing to go back"
+  putStrLn " - anything else to browse life"
   c <- getLine
   case reads c of
     [(num, _)] -> return (Rounds num)
