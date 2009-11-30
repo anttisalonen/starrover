@@ -100,7 +100,7 @@ timePass i w | i <= 0    = w
              | otherwise =
   let newgal  = regenerateGalaxy 0.05 (galaxy w)
       newemps = E.map (updateEmpire 1) (empires w)
-  in timePass (i - 1) (w{galaxy = newgal})
+  in timePass (i - 1) (w{galaxy = newgal, empires = newemps})
 
 updateEmpire :: Flt -> Empire -> Empire
 updateEmpire t e = 
@@ -110,7 +110,7 @@ updateEmpire t e =
 popgrow :: Flt -> Colony -> Colony
 popgrow t c = 
   let oldpop = population c
-      newpop = floor (fromIntegral oldpop * 1.1)
+      newpop = floor (t * 1.1 * fromIntegral oldpop)
   in c{population = newpop}
 
 getMainMenuInput :: IO MainMenuInput

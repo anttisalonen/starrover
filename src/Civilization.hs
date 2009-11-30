@@ -17,6 +17,8 @@ type CivKey = Name
 
 type ResourceUnit = Integer
 
+type GoodName = String
+
 data Good = Good { goodname :: String
                  , natural :: Maybe Natural
                  , neededGoods :: [Good]
@@ -54,7 +56,6 @@ data Building = Building { buildingname :: String
                          , goodsToBuild :: [(Good, ResourceUnit)]
                          , buildWork    :: Flt
                          , prerequisiteBuildings :: [Building]
-                         , market :: Flt -- [0..1]
                          , productionbonus :: [(Good, Flt)] -- [0..1] for each good
                          }
 
@@ -74,9 +75,18 @@ dispEmpire e = printf "%s - %d colonies" (name e) (E.size (colonies e))
 dispColoniesInfo :: Empire -> String
 dispColoniesInfo = concatMap dispColony . E.elements . colonies
 
+type Inventory = E.FM GoodName ResourceUnit
+
+transaction :: GoodName -> ResourceUnit -> Inventory -> Inventory
+transaction g u i = E.adjust (+u) g i
+
+stdColony :: String -> ResourceUnit -> GalaxyLocation -> Colony
+stdColony n p l = Colony n p l E.empty
+
 data Colony = Colony { colonyname :: String
                      , population :: ResourceUnit
-                     , location   :: [String]
+                     , location   :: GalaxyLocation
+                     , market     :: Inventory
                      }
 
 dispColony :: Colony -> String
@@ -122,9 +132,9 @@ gems    = Good "Gems"         (Just $ Natural []                   0.0 0.01) [] 
 stdGoods :: [Good]
 stdGoods = [wood, animals, water, grain, iron, coal, uranium, oil, gems]
 
---                 Name       goods       work prereq market bonus
-farm    = Building "Farm"     [(wood, 20)] 15  []     0      []
-mine    = Building "Mine"     [(wood, 30)] 30  []     0      []
+--                 Name       goods       work prereq bonus
+farm    = Building "Farm"     [(wood, 20)] 15  []     []
+mine    = Building "Mine"     [(wood, 30)] 30  []     []
 
 stdBuildings = [farm, mine]
 

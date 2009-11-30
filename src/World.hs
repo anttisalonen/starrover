@@ -67,7 +67,7 @@ createWorld g numciv = do
       if length cs < numciv 
         then return Nothing
         else do
-          let cols = map ((:[]) . Colony "colony" colonyStartPopulation) (map zipperToNames cs)
+          let cols = map ((:[]) . stdColony "colony" colonyStartPopulation) (map zipperToNames cs)
           let empires = zipWith Empire civnames (map namedsToMap cols)
           let collocs = pairToLists civnames (repeat "colony")
           return $ Just $ World 
