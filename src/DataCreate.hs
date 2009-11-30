@@ -6,6 +6,7 @@ import Data.List (sort)
 import Control.Monad.State
 import System.Random
 import qualified Data.Map as M
+import qualified Data.Edison.Assoc.StandardMap as E
 
 import Galaxy
 import Civilization
@@ -89,6 +90,12 @@ createStar genfunc name maxplanetorbitradius orbit = do
   let s = getProbTableValue r starprobs
   createStar' genfunc name maxplanetorbitradius orbit s
 
+addPrefixToPlanetName :: String -> Planet a -> Planet a
+addPrefixToPlanetName n p = 
+  let oname = planetname p
+      nname = n ++ oname
+  in p{planetname = nname, satellites = E.map (addPrefixToPlanetName n) (satellites p)}
+
 createStar' :: (Planet () -> Rnd a) -> String -> Flt -> Orbit -> SpectralType -> Rnd (Star a)
 createStar' genfunc name maxplanetorbitradius orbit spectraltype = do
   t <- randomStarTemperature spectraltype
@@ -97,8 +104,7 @@ createStar' genfunc name maxplanetorbitradius orbit spectraltype = do
   planetorbitradiuses <- separate `fmap` sort `fmap` replicateM numplanets (randomRM (0.0001, min (fromIntegral t * 2 / 120) maxplanetorbitradius))
   planets <- zipWithM (createPlanet genfunc t) (repeat "") planetorbitradiuses
   let planets' = filter (\p -> planetTemperature' t p > 30 && planetTemperature' t p < t `div` 4) planets
-  let changename n p = p{planetname = n}
-  let planets'' = zipWith changename planetnames planets'
+  let planets'' = zipWith addPrefixToPlanetName planetnames planets'
   return $! Star name t orbit (namedsToMap planets'')
 
 namesFromBasenameCap :: String -> [String]
