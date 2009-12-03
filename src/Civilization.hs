@@ -208,12 +208,10 @@ terrainInfo es t = show t ++
 
 findColony :: E.FM CivKey Empire -> EmpireLocation -> Maybe (Empire, Colony)
 findColony _ []     = Nothing
-findColony m (e:es) = 
-  case E.lookupM e m of
-    Nothing -> Nothing
-    Just n  -> case findColony' (colonies n) es of
-                 Nothing -> Nothing
-                 Just c  -> Just (n, c)
+findColony m (e:es) = do
+  n <- E.lookupM e m
+  c <- findColony' (colonies n) es
+  return (n, c)
 
 findColony' :: E.FM CivKey Colony -> EmpireLocation -> Maybe Colony
 findColony' _ []    = Nothing
