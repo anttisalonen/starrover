@@ -37,7 +37,7 @@ kelvinToCelsius :: Temperature -> Temperature
 kelvinToCelsius = subtract 273
 
 planetTemperature'' :: Temperature -> Flt -> PlanetType -> Temperature
-planetTemperature'' t d planettype = floor $ 300 * (((fromIntegral t) / 6000) ^ 2) * (d ** (-0.7)) * acoeff
+planetTemperature'' t d planettype = floor $ 300 * (((fromIntegral t) / 6000) ^ (2 :: Int)) * (d ** (-0.7)) * acoeff
    where acoeff = case planettype of
            Planetoid         -> 0.8
            NoAtmosphere      -> 0.8

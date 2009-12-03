@@ -6,7 +6,6 @@ import Text.Printf
 import qualified Data.Map as M
 
 import Math
-import Statistics
 import Libaddutil.Named
 import Debug.Trace
 

@@ -4,9 +4,9 @@ where
 import Data.Maybe
 import Control.Monad
 
-import Text.Printf
-import Libaddutil.Named
-import DataCreate
+import EmpireZipper
+import CreateTerrain
+import Terrain
 import GalaxyStats
 import DataFunction
 import ZipperGalaxy

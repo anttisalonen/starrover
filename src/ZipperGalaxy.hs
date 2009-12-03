@@ -11,7 +11,6 @@ import Libaddutil.Named
 import Galaxy
 import Utils
 import qualified Data.Edison.Assoc.StandardMap as E
-import qualified Data.Edison.Seq.ListSeq as ES
 
 type GalaxyZipper a = (Galaxy a, Maybe (StarSystem a, Maybe (Star a, [Planet a])))
 

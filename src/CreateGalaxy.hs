@@ -1,20 +1,17 @@
 {-# LANGUAGE Rank2Types #-} 
-module DataCreate
+module CreateGalaxy
 where
 
 import Data.List (sort)
 import Control.Monad.State
-import System.Random
 import qualified Data.Map as M
 import qualified Data.Edison.Assoc.StandardMap as E
 
 import Galaxy
-import Civilization
 import DataFunction
 import Statistics
 import Math
 import Utils
-import ZipperGalaxyUtils
 
 gasGiantByMass :: Flt -> PlanetType
 gasGiantByMass mass | mass < 20.0  = SmallGasGiant
@@ -80,6 +77,7 @@ starbinaryprobs = [(0.001, SpectralTypeB), (0.010, SpectralTypeA), (0.10, Spectr
 getProbTableValue :: (Ord a) => a -> [(a, b)] -> b
 getProbTableValue n [(_, v)] = v
 getProbTableValue n ((k, v):xs) = if n <= k then v else getProbTableValue n xs
+getProbTableValue _ []       = error "Given probability >1?"
 
 randomStarTemperature :: SpectralType -> Rnd Temperature
 randomStarTemperature s = randomRM (specTempRange s)
@@ -114,7 +112,7 @@ namesFromBasenameMin :: String -> [String]
 namesFromBasenameMin n = zipWith (++) (repeat (n ++ " ")) (map (:[]) ['a' .. 'z'])
 
 namesFromBasenameNum :: String -> [String]
-namesFromBasenameNum n = zipWith (++) (repeat (n ++ " ")) (map show [1..])
+namesFromBasenameNum n = zipWith (++) (repeat (n ++ " ")) (map show [(1 :: Int) ..])
 
 createOrbit :: Flt -> Rnd Orbit
 createOrbit oradius = return $! Orbit oradius 0 0 1 0
@@ -167,75 +165,5 @@ createGalaxy genfunc galname ssnames = do
   points <- replicateM numss (create3DPoint (-dim, dim))
   sss <- zipWithM (createStarSystem genfunc) ssnames points
   return $! Galaxy galname (namedsToMap sss)
-
-nearsystems :: [String]
-nearsystems = ["Alpha Centauri",
-               "Barnard's Star",
-               "Wolf 359",
-               "Lalande 21185",
-               "Sirius",
-               "Lyuten 726-8",
-               "Ross 154",
-               "Ross 248",
-               "Epsilon Eridani",
-               "Lacaille 9352",
-               "Ross 128",
-               "EZ Aquarii",
-               "Procyon",
-               "61 Cygni",
-               "Tau Ceti",
-               "Fomalhaut",
-               "Struve 2398",
-               "Groombridge 34",
-               "Epsilon Indi",
-               "DX Cancri",
-               "GJ 1061",
-               "YZ Ceti", 
-               "Lyuten's Star",
-               "Kapteyn's Star"
-              ]
-
-testGalaxy :: Galaxy Terrain
-testGalaxy = testRandomGalaxy 20 16
-
-testRandomGalaxy :: Int -> Int -> Galaxy Terrain
-testRandomGalaxy v numsys =
-  let r = mkStdGen v
-  in evalState (createGalaxy (createTerrain stdGoods) "milky way" (take numsys $ nearsystems ++ map show [1..numsys])) r
-
-createTerrain :: [Good] -> Planet () -> Rnd Terrain
-createTerrain gs p = 
-  case planettype p of
-    Planetoid         -> createRockyTerrain gs p
-    NoAtmosphere      -> createRockyTerrain gs p
-    RockyPlanet _     -> createRockyTerrain gs p
-    SmallGasGiant     -> return (Terrain [] [])
-    MediumGasGiant    -> return (Terrain [] [])
-    LargeGasGiant     -> return (Terrain [] [])
-    VeryLargeGasGiant -> return (Terrain [] [])
-
-createRockyTerrain :: [Good] -> Planet () -> Rnd Terrain
-createRockyTerrain gs p = do
-  massmult <- randomRM (0, 1000 * planetMass p)
-  gs' <- mapMaybeM (createNaturalGood massmult (planettype p)) gs
-  return (Terrain gs' [])
-
-createNaturalGood :: Flt -> PlanetType -> Good -> Rnd (Maybe (Resource, ResourceUnit))
-createNaturalGood massmult pt g = 
-  case natural g of
-    Nothing                       -> return Nothing
-    Just (Natural atms _ initial) -> do
-      let atmNeeded = not $ null atms
-      let invAtm = if not atmNeeded 
-                     then False
-                     else case pt of
-                       RockyPlanet a -> a `notElem` atms
-                       _             -> True
-      if invAtm 
-        then return Nothing
-        else do
-          mult <- randomRM (0, initial)
-          let v = floor $ mult * massmult
-          return $ Just ((g, v), v)
 
 

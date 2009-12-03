@@ -12,6 +12,7 @@ import DataFunction
 import Libaddutil.Named
 import Utils
 import Civilization
+import Terrain
 
 findZipperGalaxyToPlanet :: (Eq a) => Planet a -> Galaxy a -> Maybe (GalaxyZipper a)
 findZipperGalaxyToPlanet p g = firstMaybe (findZipperStarSystemToPlanet p g) (M.elems (Galaxy.starsystems g))

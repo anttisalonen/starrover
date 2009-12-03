@@ -42,16 +42,13 @@ numBodiesInStarSystem = sum . map numBodiesOrbitingStar . M.elems . stars
 numBodiesInGalaxy :: Galaxy a -> Int
 numBodiesInGalaxy = sum . map numBodiesInStarSystem . M.elems . starsystems
 
-starsInGalaxy :: Galaxy a -> [Star a]
-starsInGalaxy = concatMap M.elems . map stars . M.elems . starsystems
-
 moonsInGalaxy :: Galaxy a -> [Planet a]
 moonsInGalaxy = concatMap M.elems . map satellites . allBodies
 
 numMoonsInGalaxy :: Galaxy a -> Int
 numMoonsInGalaxy = length . moonsInGalaxy
 
-numStarsByType t g = (filter (\s -> spectralType s == t)) (starsInGalaxy g)
+numStarsByType t g = (filter (\s -> spectralType s == t)) (allStars g)
 
 numBStarsInGalaxy = length . numStarsByType SpectralTypeB
 numAStarsInGalaxy = length . numStarsByType SpectralTypeA

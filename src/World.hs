@@ -4,7 +4,6 @@ where
 import Galaxy
 import ZipperGalaxy
 import ZipperGalaxyUtils
-import DataFunction
 import Civilization
 import Statistics
 import Utils
@@ -13,6 +12,8 @@ import Control.Monad.State
 import Data.Maybe (mapMaybe)
 import Data.List (foldl')
 import qualified Data.Edison.Assoc.StandardMap as E
+import Terrain
+import Good
 
 data World = World { galaxy  :: Galaxy Terrain
                    , time    :: GalaxyTime
@@ -77,25 +78,4 @@ createWorld g numciv = do
                nullGalaxyTime 
                (namedsToMap empires) 
                nullPlayer
-
-type EmpireZipper = (E.FM CivKey Empire, Maybe (Empire, Maybe Colony))
-
-newEmpireZipper :: World -> EmpireZipper
-newEmpireZipper w = (empires w, Nothing)
-
-upEZ :: EmpireZipper -> EmpireZipper
-upEZ (es, Nothing) = (es, Nothing)
-upEZ (es, Just (e, Nothing)) = (es, Nothing)
-upEZ (es, Just (e, Just c)) = (es, Just (e, Nothing))
-
-tryDownEZ :: CivKey -> EmpireZipper -> Maybe EmpireZipper
-tryDownEZ s (es, Nothing) =
-  case E.lookupM s es of
-    Nothing -> Nothing
-    Just em -> Just (es, Just (em, Nothing))
-tryDownEZ s (es, Just (e, Nothing)) = 
-  case E.lookupM s (colonies e) of
-    Nothing -> Nothing
-    Just co -> Just (es, Just (e, Just co))
-tryDownEZ _ _ = Nothing
 
